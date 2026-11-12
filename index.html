@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <link rel="icon" href="favicon.ico">
+      <link rel="icon" href="favicon.ico">
   <link rel="manifest" href="site.webmanifest">
   </head>
 <meta charset="utf-8">
@@ -50,7 +50,7 @@ input[type=checkbox]{width:20px;height:20px;cursor:pointer;accent-color:var(--ac
 .el{font-variant-numeric:tabular-nums}
 .est{color:var(--blue);font-variant-numeric:tabular-nums}
 .dot{width:12px;height:12px;border-radius:50%;display:inline-block;margin-right:8px}
-.rot{display:inline-block;font-weight:700;font-size:1.2em;line-height:1;margin-right:6px;vertical-align:-1px}
+.rot{display:inline-block;margin-right:6px;vertical-align:-4px}
 .late{color:var(--danger);font-weight:700}
 .empty{padding:28px 16px;text-align:center;color:var(--muted)}
 .ov{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;padding:14px;z-index:20}
@@ -75,6 +75,8 @@ textarea.nt{min-height:70px;font:inherit;font-size:.95rem}
 .err{color:var(--danger);font-size:.85rem;min-height:1.2em;margin-top:4px}
 .info{font-size:min(14px,1.9vh,3.1vw);line-height:1.3}
 .info ol{padding-left:20px;margin:0}.info li{margin-bottom:.4em}
+.gi{background:none;border:1px solid var(--line);border-radius:6px;padding:3px 5px;margin-right:6px;cursor:pointer;color:var(--accent);vertical-align:middle;line-height:0}.gi:hover{background:var(--hover)}
+#stats2{flex-direction:column;gap:6px;font-size:.85rem}
 </style>
 </head>
 <body>
@@ -98,12 +100,17 @@ textarea.nt{min-height:70px;font:inherit;font-size:.95rem}
 <span>Total Estimated Time (Passive Tasks): <b id="sP"></b></span>
 <span>Total Tasks Left: <b id="sN"></b></span>
 </div>
+<div class="stats" id="stats2" hidden>
+<span><button class="gi" data-g="a" aria-label="Show 7-day graph"><svg viewBox="0 0 16 16" width="16" height="16" fill="currentColor" aria-hidden="true"><rect x="1" y="8" width="3" height="7"/><rect x="6" y="3" width="3" height="12"/><rect x="11" y="6" width="3" height="9"/></svg></button>Average active task hours per day: <b id="gA"></b></span>
+<span><button class="gi" data-g="p" aria-label="Show 7-day graph"><svg viewBox="0 0 16 16" width="16" height="16" fill="currentColor" aria-hidden="true"><rect x="1" y="8" width="3" height="7"/><rect x="6" y="3" width="3" height="12"/><rect x="11" y="6" width="3" height="9"/></svg></button>Average passive tasks hours per day: <b id="gP"></b></span>
+<span><button class="gi" data-g="n" aria-label="Show 7-day graph"><svg viewBox="0 0 16 16" width="16" height="16" fill="currentColor" aria-hidden="true"><rect x="1" y="8" width="3" height="7"/><rect x="6" y="3" width="3" height="12"/><rect x="11" y="6" width="3" height="9"/></svg></button>Average completed tasks per day: <b id="gN"></b></span>
+</div>
 </div>
 <div class="wrap"><table id="tbl"></table></div>
 </main>
 
 <div class="ov" id="edOv" hidden><div class="panel">
-<div class="ph"><h2 id="edT">Add a task</h2><button class="btn" id="fDel" aria-label="Delete task" title="Delete task" hidden>🗑</button></div>
+<div class="ph"><h2 id="edT">Add a task</h2><button class="btn" id="fDel" aria-label="Delete task" title="Delete task" style="color:var(--danger);line-height:0;padding:8px" hidden><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14M10 10v7M14 10v7"/></svg></button></div>
 <label for="fN">Name</label><input type="text" id="fN" maxlength="200">
 <div class="row">
 <div><label for="fP">Priority level</label><select id="fP">
@@ -136,17 +143,22 @@ textarea.nt{min-height:70px;font:inherit;font-size:.95rem}
 <div class="acts"><button class="btn" id="ioC">Close</button><button class="btn pri" id="ioA"></button></div>
 </div></div>
 
+<div class="ov" id="gOv" hidden><div class="panel">
+<div class="ph"><h2 id="gT"></h2><button class="x" id="gC" aria-label="Close">✕</button></div>
+<p style="margin:0 0 6px;color:var(--muted);font-size:.85rem">Last 7 days, ending today</p><div id="gB"></div>
+</div></div>
+
 <div class="ov" id="inOv" hidden><div class="panel info">
 <div class="ph"><h2>How to use Task Board</h2><button class="x" id="inC" aria-label="Close">✕</button></div>
 <ol>
 <li><b>Add a task</b> with “+ Add a task”. Only the name is required. Priority defaults to Medium and the due date to none.</li>
-<li><b>Priority</b> is worth 5 to 1 points: Urgent (red), High (orange), Medium (yellow), Low (light green), Optional (light blue). It shows as a dot before the name, or a ↻ symbol for recurring tasks.</li>
+<li><b>Priority</b> is worth 5 to 1 points: Urgent (red), High (orange), Medium (yellow), Low (light green), Optional (light blue). It shows as a dot before the name, or as two circling arrows in a circle for recurring tasks.</li>
 <li>The list is sorted by due date, then priority. Click any header to sort ascending or descending.</li>
 <li><b>Due</b> shows days left. 0 days (red) means due today or overdue.</li>
 <li><b>Timer:</b> ▶ starts and ⏸ pauses, under the due date. Blue is your estimate and black is the time spent.</li>
-<li><b>Edit</b> by clicking a row (not the checkbox or timer). Set priority, due date, estimated and actual duration, recurring (daily, weekly, monthly), passive and notes. Save keeps changes, Cancel discards them, 🗑 deletes.</li>
-<li><b>Done?</b> moves a task to Finished tasks, newest first. Untick it there to bring it back. Recurring tasks leave a read-only history entry and reappear at midnight on their next date.</li>
-<li>The <b>totals</b> above the list split estimated time between active and passive tasks.</li>
+<li><b>Edit</b> by clicking a row (not the checkbox or timer). Set priority, due date, estimated and actual duration, recurring (daily, weekly, monthly), passive and notes. Save keeps changes, Cancel discards them, and the red trash icon deletes.</li>
+<li><b>Done?</b> moves a task to Finished tasks, newest first. Untick it there to bring it back. Recurring tasks leave a history entry (only its actual duration can be edited) and reappear at midnight on their next date.</li>
+<li>The <b>totals</b> above the list split estimated time between active and passive tasks. On Finished tasks, the 7-day averages each have a graph icon that opens a chart.</li>
 <li><b>Backup:</b> Export shows your data to copy. Import restores it from a file or pasted text.</li>
 </ol>
 </div></div>
@@ -164,6 +176,9 @@ function find(id){return state.tasks.find(function(x){return x.id===id})}
 function el(t){return (t.elapsed||0)+(t.running?Date.now()-t.running:0)}
 function fmt(ms){var s=Math.floor(ms/1000),h=Math.floor(s/3600),m=Math.floor(s%3600/60);s%=60;return (h<10?'0':'')+h+':'+(m<10?'0':'')+m+':'+(s<10?'0':'')+s}
 function p2(n){return (n<10?'0':'')+n}
+function rotIcon(c,t){return '<svg class="rot" viewBox="3 3 14 14" width="18" height="18" fill="none" stroke="currentColor" style="color:'+c+'" role="img" aria-label="'+t+'"><title>'+t+'</title><path d="M5.77 8.46A4.5 4.5 0 0 1 13.45 7.11M14.23 11.54A4.5 4.5 0 0 1 6.55 12.89" stroke-width="1.5" stroke-linecap="round"/><polygon fill="currentColor" stroke="none" points="14.74,8.64 14.83,5.95 12.07,8.27"/><polygon fill="currentColor" stroke="none" points="5.26,11.36 5.17,14.05 7.93,11.73"/></svg>'}
+function dayData(){var r=[],s=sod(Date.now()),i,d;for(i=6;i>=0;i--){d=new Date(s);d.setDate(d.getDate()-i);r.push({k:iso(d),lab:MON[d.getMonth()]+' '+d.getDate(),a:0,p:0,n:0})}
+state.tasks.forEach(function(t){if(!t.done||!t.completedAt)return;var k=iso(new Date(t.completedAt)),x=r.find(function(y){return y.k===k});if(!x)return;x.n++;var h=el(t)/36e5;if(t.passive)x.p+=h;else x.a+=h});return r}
 function iso(d){return d.getFullYear()+'-'+p2(d.getMonth()+1)+'-'+p2(d.getDate())}
 function sod(n){var d=new Date(n);d.setHours(0,0,0,0);return d}
 function fdate(d){return d?d.slice(2,4)+MON[+d.slice(5,7)-1]+d.slice(8,10):'—'}
@@ -189,7 +204,9 @@ function sorted(list){var s=sortS[tab];return list.slice().sort(function(a,b){
 var r=s.k==='auto'?0:cmp(a,b,s.k,s.d);
 return r||cmp(a,b,'due',1)||((b.priority||3)-(a.priority||3))||cmp(a,b,'name',1)})}
 function stats(){var a=0,p=0,n=0;state.tasks.forEach(function(t){if(t.done||t.hiddenUntil)return;n++;var e=+t.est||0;if(t.passive)p+=e;else a+=e});
-$('sA').textContent=hm(a);$('sP').textContent=hm(p);$('sN').textContent=n}
+$('sA').textContent=hm(a);$('sP').textContent=hm(p);$('sN').textContent=n;
+var sa=0,sp=0,sn=0,nd=0;dayData().forEach(function(x){sa+=x.a;sp+=x.p;sn+=x.n;if(x.n)nd++});nd=Math.max(1,nd);
+$('gA').textContent=(sa/nd).toFixed(1)+' h';$('gP').textContent=(sp/nd).toFixed(1)+' h';$('gN').textContent=(sn/nd).toFixed(1)}
 function render(){
 var done=tab==='done',s=sortS[tab],list=sorted(state.tasks.filter(function(t){return !t.hiddenUntil&&!!t.done===done}));
 var cols=done?[['completedAt','Due & Done'],['done','Done?'],['name','Task']]:[['due','Due'],['done','Done?'],['name','Task']];
@@ -197,7 +214,7 @@ var h='<thead><tr>'+cols.map(function(c){var ar=s.k===c[0]?(s.d>0?' ▲':' ▼')
 if(!list.length)h+='<tr><td class="empty" colspan="3">'+(done?'Nothing finished yet.':'No tasks yet. Add one to get started.')+'</td></tr>';
 list.forEach(function(t){
 var p=PR[t.priority]||PR[3],
-ico=t.recurring?'<span class="rot" title="'+p[0]+' priority, repeats '+(t.recur||'daily')+'" style="color:'+p[1]+'">↻</span>':'<span class="dot" title="'+p[0]+' priority" style="background:'+p[1]+'"></span>',
+ico=t.recurring?rotIcon(p[1],p[0]+' priority, repeats '+(t.recur||'daily')):'<span class="dot" title="'+p[0]+' priority" style="background:'+p[1]+'"></span>',
 nm='<td class="name">'+ico+esc(t.name)+'</td>',
 est=t.est!==''&&t.est!=null?'<div class="est">'+fmt(t.est*60000)+'</div>':'',
 chk='<td class="tt"><input type="checkbox" data-act="done" aria-label="Done"'+(t.done?' checked':'')+(t.hist?' disabled':'')+'>'+(done?est+'<div class="el">'+fmt(el(t))+'</div>':'')+'</td>',first;
@@ -205,7 +222,7 @@ if(done)first='<td class="tt"><div class="est">'+fdate(t.due)+'</div><div>'+(t.c
 else{var n=t.due?days(t.due):null;first='<td class="tt"><div'+(n===0?' class="late"':'')+'>'+(n===null?'—':n+(n===1?' day':' days'))+'</div><button data-act="timer" class="tm'+(t.running?' on':'')+'" aria-label="'+(t.running?'Pause timer':'Start timer')+'">'+(t.running?'⏸':'▶')+'</button>'+est+'<div class="el" data-el="'+t.id+'">'+fmt(el(t))+'</div></td>'}
 h+='<tr data-id="'+t.id+'"'+(t.done?' class="fin"':'')+'>'+first+chk+nm+'</tr>'});
 $('tbl').innerHTML=h+'</tbody>';
-$('bar').hidden=done;stats();
+$('add').hidden=done;$('stats').hidden=done;$('stats2').hidden=!done;stats();
 }
 $('tbl').addEventListener('click',function(e){
 var th=e.target.closest('th');
@@ -221,19 +238,21 @@ setInterval(function(){var d=iso(new Date());if(wake()||d!==lastDay){lastDay=d;r
 document.querySelectorAll('[data-el]').forEach(function(c){var t=find(c.dataset.el);if(t)c.textContent=fmt(el(t))})},1000);
 document.querySelectorAll('.tab').forEach(function(b){b.onclick=function(){tab=b.dataset.tab;document.querySelectorAll('.tab').forEach(function(x){x.setAttribute('aria-selected',x===b)});render()}});
 
-function openEd(id){var t=id?find(id):null;if(t&&t.hist)return;editId=id;
-$('edT').textContent=t?'Edit task':'Add a task';
+function openEd(id){var t=id?find(id):null;editId=id;
+$('edT').textContent=t?(t.hist?'Edit finished task':'Edit task'):'Add a task';
 $('fN').value=t?t.name:'';$('fP').value=t?t.priority:3;$('fD').value=t?t.due||'':'';
 setHM('fEh','fEm',t?t.est:'');origA=t?Math.round(el(t)/60000):null;setHM('fAh','fAm',origA===null?'':origA);
 $('fR').checked=!!(t&&t.recurring);document.querySelector('input[name=rc][value='+(t&&t.recur?t.recur:'daily')+']').checked=true;$('seg').hidden=!$('fR').checked;
 $('fPs').checked=!!(t&&t.passive);$('fNo').value=t&&t.notes?t.notes:'';
-$('fErr').textContent='';$('fDel').hidden=!t;$('edOv').hidden=false;$('fN').focus()}
+var lock=!!(t&&t.hist);['fN','fP','fD','fEh','fEm','fR','fPs','fNo'].forEach(function(i){$(i).disabled=lock});document.querySelectorAll('input[name=rc]').forEach(function(r){r.disabled=lock});
+$('fErr').textContent='';$('fDel').hidden=!t||lock;$('edOv').hidden=false;$(lock?'fAh':'fN').focus()}
 $('fR').onchange=function(){$('seg').hidden=!this.checked};
 $('add').onclick=function(){openEd(null)};
 $('fCan').onclick=function(){$('edOv').hidden=true};
 $('fSav').onclick=function(){
 var n=$('fN').value.trim();if(!n){$('fErr').textContent='Enter a name for the task.';return}
 var t=editId?find(editId):null;
+if(t&&t.hist){var m0=getHM('fAh','fAm');if(m0!==null&&m0!==origA)t.elapsed=m0*60000;save();$('edOv').hidden=true;render();return}
 if(!t){t={id:Date.now().toString(36)+Math.random().toString(36).slice(2,6),elapsed:0,running:null,done:false,completedAt:null,created:Date.now()};state.tasks.push(t)}
 t.name=n;t.priority=parseInt($('fP').value,10)||3;t.due=$('fD').value||'';
 var e=getHM('fEh','fEm');t.est=e===null?'':e;
@@ -260,6 +279,18 @@ state={tasks:o.tasks.filter(function(t){return t&&t.name}).map(function(t,i){ret
 save();$('ioOv').hidden=true;render()}catch(e){$('ioE').textContent='That backup could not be read. Check that you pasted the full text.'}};
 $('info').onclick=function(){$('inOv').hidden=false};$('inC').onclick=function(){$('inOv').hidden=true};
 document.addEventListener('keydown',function(e){if(e.key==='Escape')document.querySelectorAll('.ov').forEach(function(o){o.hidden=true})});
+function openGraph(g){var T={a:['Active task hours per day','Hours'],p:['Passive task hours per day','Hours'],n:['Completed tasks per day','Tasks']}[g],d=dayData(),hrs=g!=='n',mx=0;
+d.forEach(function(x){if(x[g]>mx)mx=x[g]});
+mx=hrs?Math.max(0.5,Math.ceil(mx*2)/2):Math.max(1,Math.ceil(mx));
+var L=40,R=8,Tp=16,B=30,W=320,H=210,pw=W-L-R,ph=H-Tp-B,s='<svg viewBox="0 0 '+W+' '+H+'" width="100%" role="img" aria-label="'+T[0]+', last 7 days" style="font-size:10px">';
+[0,.5,1].forEach(function(f){var y=Tp+ph*(1-f),v=mx*f;s+='<line x1="'+L+'" x2="'+(W-R)+'" y1="'+y+'" y2="'+y+'" style="stroke:var(--line)"/><text x="'+(L-5)+'" y="'+(y+3)+'" text-anchor="end" style="fill:var(--muted)">'+(+v.toFixed(2))+'</text>'});
+s+='<text transform="translate(10 '+(Tp+ph/2)+') rotate(-90)" text-anchor="middle" style="fill:var(--muted)">'+T[1]+'</text>';
+d.forEach(function(x,i){var bw=pw/7,h=ph*x[g]/mx,bx=L+i*bw+bw*.2,y=Tp+ph-h;
+s+='<rect x="'+bx+'" y="'+y+'" width="'+bw*.6+'" height="'+h+'" rx="2" style="fill:var(--accent)"/>';
+if(x[g]>0)s+='<text x="'+(bx+bw*.3)+'" y="'+(y-3)+'" text-anchor="middle" style="fill:var(--ink)">'+(+x[g].toFixed(1))+'</text>';
+s+='<text x="'+(bx+bw*.3)+'" y="'+(H-12)+'" text-anchor="middle" style="fill:var(--muted)">'+x.lab+'</text>'});
+$('gT').textContent=T[0];$('gB').innerHTML=s+'</svg>';$('gOv').hidden=false}
+document.querySelectorAll('.gi').forEach(function(b){b.onclick=function(){openGraph(b.dataset.g)}});$('gC').onclick=function(){$('gOv').hidden=true};
 load();wake();lastDay=iso(new Date());render();
 </script>
 </body>
