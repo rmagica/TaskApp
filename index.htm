@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Task Board</title>
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+--bg:#f3f1ec;--surface:#fff;--ink:#1d2433;--muted:#6a7385;--line:#dcd8cf;--accent:#1f4e79;--accent-ink:#fff;--hover:#f0ede6;
+--p5:#e5484d;--p4:#f08a24;--p3:#e8c52a;--p2:#7fcf6b;--p1:#7cc0ee;--danger:#c0392b;color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#14171d;--surface:#1d222b;--ink:#e8eaf0;--muted:#9099ab;--line:#323948;--accent:#7fb2e5;--accent-ink:#10161f;--hover:#262c37;--danger:#ff7b6b;color-scheme:dark}}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:inherit}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.4 "Trebuchet MS","Segoe UI",system-ui,sans-serif}
+main{max-width:920px;margin:0 auto;padding:14px 14px 40px}
+header{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+h1{font:700 1.5rem/1.1 Georgia,"Times New Roman",serif;margin:0}
+button,input,select{font:inherit;color:inherit}
+.btn{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:7px 12px;cursor:pointer}
+.btn:hover{background:var(--hover)}
+.btn.pri{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:600}
+.btn.dng{color:var(--danger)}
+.tools{display:flex;gap:6px}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.tabs{display:flex;gap:4px;border-bottom:2px solid var(--line);margin-bottom:14px}
+.tab{background:none;border:0;padding:9px 16px;cursor:pointer;color:var(--muted);border-bottom:3px solid transparent;margin-bottom:-2px;font-weight:600}
+.tab[aria-selected=true]{color:var(--ink);border-bottom-color:var(--accent)}
+.add{margin-bottom:12px}
+.wrap{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:10px}
+table{width:100%;border-collapse:collapse;min-width:640px}
+th{text-align:left;padding:10px;font-size:.85rem;color:var(--muted);cursor:pointer;user-select:none;white-space:nowrap;border-bottom:1px solid var(--line)}
+th:hover{color:var(--ink)}
+td{padding:10px;border-bottom:1px solid var(--line);vertical-align:middle}
+tr[data-id]{cursor:pointer}
+tr[data-id]:hover{background:var(--hover)}
+tr:last-child td{border-bottom:0}
+td.stop{cursor:default;width:1%;white-space:nowrap}
+td.name{min-width:160px;overflow-wrap:anywhere}
+tr.fin td.name{text-decoration:line-through;color:var(--muted)}
+input[type=checkbox]{width:20px;height:20px;cursor:pointer;accent-color:var(--accent)}
+.tm{width:34px;height:34px;border-radius:50%;border:1px solid var(--line);background:var(--surface);cursor:pointer;font-size:.9rem;line-height:1}
+.tm.on{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.el{font-variant-numeric:tabular-nums;white-space:nowrap}
+.pill{display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.dot{width:12px;height:12px;border-radius:50%;flex:none}
+.late{color:var(--danger);font-weight:600}
+.empty{padding:28px 16px;text-align:center;color:var(--muted)}
+.ov{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;padding:14px;z-index:20}
+.ov[hidden]{display:none}
+.panel{background:var(--surface);border-radius:12px;padding:18px;width:100%;max-width:440px;max-height:90%;overflow:auto;box-shadow:0 12px 40px rgba(0,0,0,.35)}
+.panel h2{margin:0 0 12px;font:700 1.2rem Georgia,serif}
+label{display:block;font-size:.88rem;font-weight:600;margin:10px 0 4px}
+input[type=text],input[type=date],input[type=number],select,textarea{width:100%;padding:8px;border:1px solid var(--line);border-radius:8px;background:var(--bg)}
+textarea{min-height:140px;font:.8rem/1.3 monospace}
+.row{display:flex;gap:10px}.row>div{flex:1}
+.acts{display:flex;gap:8px;margin-top:16px;justify-content:flex-end;flex-wrap:wrap}
+.err{color:var(--danger);font-size:.85rem;min-height:1.2em;margin-top:4px}
+.panel ol{padding-left:20px;margin:0}.panel li{margin-bottom:8px}
+</style>
+</head>
+<body>
+<main>
+<header>
+<h1>Task Board</h1>
+<div class="tools">
+<button class="btn" id="exp">Export</button>
+<button class="btn" id="imp">Import</button>
+<button class="btn" id="info" aria-label="How to use this app">ⓘ Info</button>
+</div>
+</header>
+<div class="tabs" role="tablist">
+<button class="tab" role="tab" data-tab="cur" aria-selected="true">Current tasks</button>
+<button class="tab" role="tab" data-tab="done" aria-selected="false">Finished tasks</button>
+</div>
+<button class="btn pri add" id="add">+ Add a task</button>
+<div class="wrap"><table id="tbl"></table></div>
+</main>
+
+<div class="ov" id="edOv" hidden><div class="panel">
+<h2 id="edT">Add a task</h2>
+<label for="fN">Name</label><input type="text" id="fN" maxlength="200">
+<div class="row">
+<div><label for="fP">Priority level</label><select id="fP">
+<option value="5">Urgent</option><option value="4">High</option><option value="3" selected>Medium</option><option value="2">Low</option><option value="1">Optional</option></select></div>
+<div><label for="fD">Due date</label><input type="date" id="fD"></div></div>
+<div class="row">
+<div><label>Estimated duration</label><div class="row"><input type="number" id="fEh" min="0" step="1" placeholder="hrs" aria-label="Estimated hours"><input type="number" id="fEm" min="0" step="1" placeholder="min" aria-label="Estimated minutes"></div></div>
+<div><label>Actual duration</label><div class="row"><input type="number" id="fAh" min="0" step="1" placeholder="hrs" aria-label="Actual hours"><input type="number" id="fAm" min="0" step="1" placeholder="min" aria-label="Actual minutes"></div></div></div>
+<div class="err" id="fErr"></div>
+<div class="acts"><button class="btn dng" id="fDel" hidden>Delete</button><button class="btn" id="fCan">Cancel</button><button class="btn pri" id="fSav">Save</button></div>
+</div></div>
+
+<div class="ov" id="ioOv" hidden><div class="panel">
+<h2 id="ioT"></h2><p id="ioH" style="margin:0 0 8px;color:var(--muted);font-size:.9rem"></p>
+<input type="file" id="ioF" accept=".json,application/json" style="margin-bottom:8px">
+<textarea id="ioX" spellcheck="false"></textarea>
+<div class="err" id="ioE"></div>
+<div class="acts"><button class="btn" id="ioC">Close</button><button class="btn pri" id="ioA"></button></div>
+</div></div>
+
+<div class="ov" id="inOv" hidden><div class="panel">
+<h2>How to use Task Board</h2>
+<ol>
+<li><b>Add a task</b> with “+ Add a task”. Only the name is required. Priority defaults to Medium and the due date to none.</li>
+<li><b>Priority levels</b> are worth 5 to 1 points: Urgent (red), High (orange), Medium (yellow), Low (light green), Optional (light blue).</li>
+<li>The list starts sorted by due date (soonest first). Tasks with the same due date are ordered by priority. Click any column header to sort ascending or descending.</li>
+<li><b>Timer:</b> press ▶ to start tracking time on a task and ⏸ to pause. Elapsed time keeps running until you pause.</li>
+<li><b>Edit:</b> click anywhere on a row (except the checkbox and timer button) to change name, priority, due date, estimated and actual duration (in hours and minutes). Save keeps changes; Cancel discards them.</li>
+<li><b>Complete</b> a task with its checkbox. It moves to Finished tasks, newest first. Untick it there to send it back.</li>
+<li><b>Backup:</b> Export shows all your data to copy and keep. Import restores it from a file or pasted text.</li>
+</ol>
+<div class="acts"><button class="btn pri" id="inC">Close</button></div>
+</div></div>
+
+<script>
+var KEY='taskboard-v1',state={tasks:[]},tab='cur',editId=null;
+var sortS={cur:{k:'auto',d:1},done:{k:'completedAt',d:-1}};
+var PR={5:['Urgent','var(--p5)'],4:['High','var(--p4)'],3:['Medium','var(--p3)'],2:['Low','var(--p2)'],1:['Optional','var(--p1)']};
+var COLS={cur:[['done','Completed?'],['timer','Timer'],['elapsed','Elapsed time'],['name','Task'],['priority','Priority'],['due','Due date']],
+done:[['done','Completed?'],['name','Task'],['priority','Priority'],['due','Due date'],['elapsed','Time spent'],['completedAt','Finished on']]};
+var $=function(i){return document.getElementById(i)};
+function load(){try{var s=localStorage.getItem(KEY);if(s){var o=JSON.parse(s);if(o&&Array.isArray(o.tasks))state=o}}catch(e){}}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(state))}catch(e){}}
+function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+function el(t){return (t.elapsed||0)+(t.running?Date.now()-t.running:0)}
+function fmt(ms){var s=Math.floor(ms/1000),h=Math.floor(s/3600),m=Math.floor(s%3600/60);s%=60;return (h<10?'0':'')+h+':'+(m<10?'0':'')+m+':'+(s<10?'0':'')+s}
+function fdate(d){return d?new Date(d+'T00:00').toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric'}):'—'}
+function val(t,k){switch(k){case'done':return t.done?1:0;case'timer':return t.running?1:0;case'elapsed':return el(t);case'name':return t.name.toLowerCase();case'priority':return t.priority;case'due':return t.due||null;case'completedAt':return t.completedAt||null}}
+function cmp(a,b,k,d){var x=val(a,k),y=val(b,k);if(x===null&&y===null)return 0;if(x===null)return 1;if(y===null)return -1;return x<y?-d:x>y?d:0}
+function sorted(list){var s=sortS[tab];return list.slice().sort(function(a,b){
+var r=s.k==='auto'?0:cmp(a,b,s.k,s.d);
+return r||cmp(a,b,'due',1)||cmp(a,b,'priority',-1)||cmp(a,b,'name',1)})}
+function render(){
+var list=sorted(state.tasks.filter(function(t){return !!t.done===(tab==='done')})),s=sortS[tab],today=new Date().toISOString().slice(0,10);
+var h='<thead><tr>'+COLS[tab].map(function(c){var ar=s.k===c[0]?(s.d>0?' ▲':' ▼'):'';return '<th data-k="'+c[0]+'">'+c[1]+ar+'</th>'}).join('')+'</tr></thead><tbody>';
+if(!list.length)h+='<tr><td class="empty" colspan="6">'+(tab==='cur'?'No tasks yet. Add one to get started.':'Nothing finished yet.')+'</td></tr>';
+list.forEach(function(t){
+var p=PR[t.priority]||PR[3],chk='<td class="stop" data-act="done"><input type="checkbox" aria-label="Completed"'+(t.done?' checked':'')+'></td>',
+nm='<td class="name">'+esc(t.name)+'</td>',
+pr='<td><span class="pill"><span class="dot" style="background:'+p[1]+'"></span>'+p[0]+'</span></td>',
+du='<td'+(!t.done&&t.due&&t.due<today?' class="late"':'')+'>'+fdate(t.due)+'</td>',
+ela='<td class="el" data-el="'+t.id+'">'+fmt(el(t))+'</td>';
+h+='<tr data-id="'+t.id+'"'+(t.done?' class="fin"':'')+'>';
+if(tab==='cur')h+=chk+'<td class="stop" data-act="timer"><button class="tm'+(t.running?' on':'')+'" aria-label="'+(t.running?'Pause timer':'Start timer')+'">'+(t.running?'⏸':'▶')+'</button></td>'+ela+nm+pr+du;
+else h+=chk+nm+pr+du+ela+'<td>'+(t.completedAt?new Date(t.completedAt).toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric'}):'—')+'</td>';
+h+='</tr>'});
+$('tbl').innerHTML=h+'</tbody>';
+$('add').hidden=tab!=='cur';
+}
+$('tbl').addEventListener('click',function(e){
+var th=e.target.closest('th');
+if(th){var k=th.dataset.k,s=sortS[tab];if(s.k===k)s.d=-s.d;else{s.k=k;s.d=1}render();return}
+var tr=e.target.closest('tr[data-id]');if(!tr)return;
+var t=state.tasks.find(function(x){return x.id===tr.dataset.id}),a=e.target.closest('[data-act]');
+if(!a){openEd(t.id);return}
+if(a.dataset.act==='done'){
+if(!t.done){if(t.running){t.elapsed=el(t);t.running=null}t.done=true;t.completedAt=Date.now()}
+else{t.done=false;t.completedAt=null}
+}else{if(t.running){t.elapsed=el(t);t.running=null}else t.running=Date.now()}
+save();render()});
+setInterval(function(){document.querySelectorAll('[data-el]').forEach(function(c){var t=state.tasks.find(function(x){return x.id===c.dataset.el});if(t)c.textContent=fmt(el(t))})},1000);
+document.querySelectorAll('.tab').forEach(function(b){b.onclick=function(){tab=b.dataset.tab;document.querySelectorAll('.tab').forEach(function(x){x.setAttribute('aria-selected',x===b)});render()}});
+
+function openEd(id){editId=id;var t=id?state.tasks.find(function(x){return x.id===id}):null;
+$('edT').textContent=t?'Edit task':'Add a task';
+$('fN').value=t?t.name:'';$('fP').value=t?t.priority:3;$('fD').value=t?t.due||'':'';
+setHM('fEh','fEm',t?t.est:'');setHM('fAh','fAm',t?Math.round(el(t)/60000):'');
+$('fErr').textContent='';$('fDel').hidden=!t;$('edOv').hidden=false;$('fN').focus()}
+$('add').onclick=function(){openEd(null)};
+$('fCan').onclick=function(){$('edOv').hidden=true};
+$('fSav').onclick=function(){
+var n=$('fN').value.trim();if(!n){$('fErr').textContent='Enter a name for the task.';return}
+var t=editId?state.tasks.find(function(x){return x.id===editId}):null;
+if(!t){t={id:Date.now().toString(36)+Math.random().toString(36).slice(2,6),elapsed:0,running:null,done:false,completedAt:null};state.tasks.push(t)}
+t.name=n;t.priority=parseInt($('fP').value,10)||3;t.due=$('fD').value||'';
+var e=getHM('fEh','fEm');t.est=e===null?'':e;
+var m=getHM('fAh','fAm');if(m!==null){if(Math.round(el(t)/60000)!==Math.round(m)){t.elapsed=m*60000;if(t.running)t.running=Date.now()}}
+save();$('edOv').hidden=true;render()};
+$('fDel').onclick=function(){if(editId){state.tasks=state.tasks.filter(function(x){return x.id!==editId});save();$('edOv').hidden=true;render()}};
+
+function setHM(h,m,min){if(min===''||min==null){$(h).value='';$(m).value='';return}min=Math.round(min);$(h).value=Math.floor(min/60);$(m).value=min%60}
+function getHM(h,m){var a=$(h).value,b=$(m).value;if(a===''&&b==='')return null;return Math.max(0,Math.round((parseFloat(a)||0)*60+(parseFloat(b)||0)))}
+var ioMode='';
+function openIo(m){ioMode=m;$('ioE').textContent='';$('ioF').value='';
+$('ioT').textContent=m==='x'?'Export data':'Import data';
+$('ioH').textContent=m==='x'?'Copy this text and keep it somewhere safe. Paste it into Import to restore your tasks.':'Choose a backup file or paste the backup text. This replaces your current tasks.';
+$('ioX').value=m==='x'?JSON.stringify(state,null,1):'';$('ioX').readOnly=m==='x';
+$('ioF').hidden=m==='x';$('ioA').textContent=m==='x'?'Copy to clipboard':'Import tasks';$('ioOv').hidden=false}
+$('exp').onclick=function(){openIo('x')};$('imp').onclick=function(){openIo('i')};
+$('ioC').onclick=function(){$('ioOv').hidden=true};
+$('ioF').onchange=function(){var f=this.files[0];if(!f)return;var r=new FileReader();r.onload=function(){$('ioX').value=r.result};r.readAsText(f)};
+$('ioA').onclick=function(){
+if(ioMode==='x'){var x=$('ioX');x.select();try{navigator.clipboard.writeText(x.value).then(function(){$('ioE').textContent='Copied.'},function(){document.execCommand('copy');$('ioE').textContent='Copied.'})}catch(e){document.execCommand('copy');$('ioE').textContent='Copied.'}return}
+try{var o=JSON.parse($('ioX').value);if(!o||!Array.isArray(o.tasks))throw 0;
+state={tasks:o.tasks.filter(function(t){return t&&t.name}).map(function(t,i){return{id:String(t.id||('i'+i+Date.now())),name:String(t.name),priority:+t.priority>=1&&+t.priority<=5?+t.priority:3,due:t.due||'',est:t.est===undefined?'':t.est,elapsed:+t.elapsed||0,running:t.running?+t.running:null,done:!!t.done,completedAt:t.completedAt||null}})};
+save();$('ioOv').hidden=true;render()}catch(e){$('ioE').textContent='That backup could not be read. Check that you pasted the full text.'}};
+$('info').onclick=function(){$('inOv').hidden=false};$('inC').onclick=function(){$('inOv').hidden=true};
+document.addEventListener('keydown',function(e){if(e.key==='Escape')document.querySelectorAll('.ov').forEach(function(o){o.hidden=true})});
+load();render();
+</script>
+</body>
+</html>
