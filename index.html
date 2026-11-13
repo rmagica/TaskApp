@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-      <link rel="icon" href="favicon.ico">
+        <link rel="icon" href="favicon.ico">
   <link rel="manifest" href="site.webmanifest">
   </head>
 <meta charset="utf-8">
@@ -77,6 +77,9 @@ textarea.nt{min-height:70px;font:inherit;font-size:.95rem}
 .info ol{padding-left:20px;margin:0}.info li{margin-bottom:.4em}
 .gi{background:none;border:1px solid var(--line);border-radius:6px;padding:3px 5px;margin-right:6px;cursor:pointer;color:var(--accent);vertical-align:middle;line-height:0}.gi:hover{background:var(--hover)}
 #stats2{flex-direction:column;gap:6px;font-size:.85rem}
+#stats{flex:1 1 240px;flex-direction:column;flex-wrap:nowrap;gap:2px}
+#sTop{text-align:center;font-size:1.3rem;font-weight:700}
+#stats span{text-align:center}
 </style>
 </head>
 <body>
@@ -96,9 +99,9 @@ textarea.nt{min-height:70px;font:inherit;font-size:.95rem}
 <div class="bar" id="bar">
 <button class="btn pri" id="add">+ Add a task</button>
 <div class="stats" id="stats">
+<div id="sTop">Tasks Left: <b id="sN"></b></div>
 <span>Total Estimated Time (Active Tasks): <b id="sA"></b></span>
 <span>Total Estimated Time (Passive Tasks): <b id="sP"></b></span>
-<span>Total Tasks Left: <b id="sN"></b></span>
 </div>
 <div class="stats" id="stats2" hidden>
 <span><button class="gi" data-g="a" aria-label="Show 7-day graph"><svg viewBox="0 0 16 16" width="16" height="16" fill="currentColor" aria-hidden="true"><rect x="1" y="8" width="3" height="7"/><rect x="6" y="3" width="3" height="12"/><rect x="11" y="6" width="3" height="9"/></svg></button>Average active task hours per day: <b id="gA"></b></span>
@@ -154,8 +157,8 @@ textarea.nt{min-height:70px;font:inherit;font-size:.95rem}
 <li><b>Add a task</b> with “+ Add a task”. Only the name is required. Priority defaults to Medium and the due date to none.</li>
 <li><b>Priority</b> is worth 5 to 1 points: Urgent (red), High (orange), Medium (yellow), Low (light green), Optional (light blue). It shows as a dot before the name, or as two circling arrows in a circle for recurring tasks.</li>
 <li>The list is sorted by due date, then priority. Click any header to sort ascending or descending.</li>
-<li><b>Due</b> shows days left. 0 days (red) means due today or overdue.</li>
-<li><b>Timer:</b> ▶ starts and ⏸ pauses, under the due date. Blue is your estimate and black is the time spent.</li>
+<li><b>Task &amp; Due</b> shows days left above the task name. 0 days (red) means due today or overdue.</li>
+<li><b>Timer:</b> ▶ starts and ⏸ pauses, in the first column. Blue is your estimate and black is the time spent.</li>
 <li><b>Edit</b> by clicking a row (not the checkbox or timer). Set priority, due date, estimated and actual duration, recurring (daily, weekly, monthly), passive and notes. Save keeps changes, Cancel discards them, and the red trash icon deletes.</li>
 <li><b>Done?</b> moves a task to Finished tasks, newest first. Untick it there to bring it back. Recurring tasks leave a history entry (only its actual duration can be edited) and reappear at midnight on their next date.</li>
 <li>The <b>totals</b> above the list split estimated time between active and passive tasks. On Finished tasks, the 7-day averages each have a graph icon that opens a chart.</li>
@@ -198,18 +201,18 @@ if(t.recurring){state.tasks.push({id:Date.now().toString(36)+Math.random().toStr
 t.elapsed=0;t.hiddenUntil=nextRecur(t).getTime()}
 else{t.done=true;t.completedAt=Date.now()}}
 
-function val(t,k){switch(k){case'done':return t.done?1:0;case'name':return t.name.toLowerCase();case'due':return t.due||null;case'completedAt':return t.completedAt||null}}
+function val(t,k){switch(k){case'timer':return t.running?1:0;case'done':return t.done?1:0;case'name':return t.name.toLowerCase();case'due':return t.due||null;case'completedAt':return t.completedAt||null}}
 function cmp(a,b,k,d){var x=val(a,k),y=val(b,k);if(x===null&&y===null)return 0;if(x===null)return 1;if(y===null)return -1;return x<y?-d:x>y?d:0}
 function sorted(list){var s=sortS[tab];return list.slice().sort(function(a,b){
 var r=s.k==='auto'?0:cmp(a,b,s.k,s.d);
 return r||cmp(a,b,'due',1)||((b.priority||3)-(a.priority||3))||cmp(a,b,'name',1)})}
 function stats(){var a=0,p=0,n=0;state.tasks.forEach(function(t){if(t.done||t.hiddenUntil)return;n++;var e=+t.est||0;if(t.passive)p+=e;else a+=e});
-$('sA').textContent=hm(a);$('sP').textContent=hm(p);$('sN').textContent=n;
+$('sA').textContent=hm(a);$('sP').textContent=hm(p);$('sN').textContent=n;$('sN').style.color=n===0?'#9b4fd8':n<=5?'#2f80ed':n<=10?'#2e9e4f':n<=15?'#d9a400':n<=20?'#f08a24':'#e0312f';
 var sa=0,sp=0,sn=0,nd=0;dayData().forEach(function(x){sa+=x.a;sp+=x.p;sn+=x.n;if(x.n)nd++});nd=Math.max(1,nd);
 $('gA').textContent=(sa/nd).toFixed(1)+' h';$('gP').textContent=(sp/nd).toFixed(1)+' h';$('gN').textContent=(sn/nd).toFixed(1)}
 function render(){
 var done=tab==='done',s=sortS[tab],list=sorted(state.tasks.filter(function(t){return !t.hiddenUntil&&!!t.done===done}));
-var cols=done?[['completedAt','Due & Done'],['done','Done?'],['name','Task']]:[['due','Due'],['done','Done?'],['name','Task']];
+var cols=done?[['completedAt','Due & Done'],['done','Done?'],['name','Task']]:[['timer','Timer'],['done','Done?'],['due','Task & Due']];
 var h='<thead><tr>'+cols.map(function(c){var ar=s.k===c[0]?(s.d>0?' ▲':' ▼'):'';return '<th data-k="'+c[0]+'">'+c[1]+ar+'</th>'}).join('')+'</tr></thead><tbody>';
 if(!list.length)h+='<tr><td class="empty" colspan="3">'+(done?'Nothing finished yet.':'No tasks yet. Add one to get started.')+'</td></tr>';
 list.forEach(function(t){
@@ -219,7 +222,7 @@ nm='<td class="name">'+ico+esc(t.name)+'</td>',
 est=t.est!==''&&t.est!=null?'<div class="est">'+fmt(t.est*60000)+'</div>':'',
 chk='<td class="tt"><input type="checkbox" data-act="done" aria-label="Done"'+(t.done?' checked':'')+(t.hist?' disabled':'')+'>'+(done?est+'<div class="el">'+fmt(el(t))+'</div>':'')+'</td>',first;
 if(done)first='<td class="tt"><div class="est">'+fdate(t.due)+'</div><div>'+(t.completedAt?fdate(iso(new Date(t.completedAt))):'—')+'</div></td>';
-else{var n=t.due?days(t.due):null;first='<td class="tt"><div'+(n===0?' class="late"':'')+'>'+(n===null?'—':n+(n===1?' day':' days'))+'</div><button data-act="timer" class="tm'+(t.running?' on':'')+'" aria-label="'+(t.running?'Pause timer':'Start timer')+'">'+(t.running?'⏸':'▶')+'</button>'+est+'<div class="el" data-el="'+t.id+'">'+fmt(el(t))+'</div></td>'}
+else{var n=t.due?days(t.due):null;nm=nm.replace('<td class="name">','<td class="name"><div'+(n===0?' class="late"':'')+'>'+(n===null?'—':n+(n===1?' day':' days'))+'</div>');first='<td class="tt"><button data-act="timer" class="tm'+(t.running?' on':'')+'" aria-label="'+(t.running?'Pause timer':'Start timer')+'">'+(t.running?'⏸':'▶')+'</button>'+est+'<div class="el" data-el="'+t.id+'">'+fmt(el(t))+'</div></td>'}
 h+='<tr data-id="'+t.id+'"'+(t.done?' class="fin"':'')+'>'+first+chk+nm+'</tr>'});
 $('tbl').innerHTML=h+'</tbody>';
 $('add').hidden=done;$('stats').hidden=done;$('stats2').hidden=!done;stats();
