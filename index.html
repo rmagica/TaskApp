@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-        <link rel="icon" href="favicon.ico">
+          <link rel="icon" href="favicon.ico">
   <link rel="manifest" href="site.webmanifest">
   </head>
 <meta charset="utf-8">
@@ -100,8 +100,8 @@ textarea.nt{min-height:70px;font:inherit;font-size:.95rem}
 <button class="btn pri" id="add">+ Add a task</button>
 <div class="stats" id="stats">
 <div id="sTop">Tasks Left: <b id="sN"></b></div>
-<span>Total Estimated Time (Active Tasks): <b id="sA"></b></span>
-<span>Total Estimated Time (Passive Tasks): <b id="sP"></b></span>
+<span>Total Estimated Time Left (Active Tasks): <b id="sA"></b></span>
+<span>Total Estimated Time Left (Passive Tasks): <b id="sP"></b></span>
 </div>
 <div class="stats" id="stats2" hidden>
 <span><button class="gi" data-g="a" aria-label="Show 7-day graph"><svg viewBox="0 0 16 16" width="16" height="16" fill="currentColor" aria-hidden="true"><rect x="1" y="8" width="3" height="7"/><rect x="6" y="3" width="3" height="12"/><rect x="11" y="6" width="3" height="9"/></svg></button>Average active task hours per day: <b id="gA"></b></span>
@@ -161,7 +161,7 @@ textarea.nt{min-height:70px;font:inherit;font-size:.95rem}
 <li><b>Timer:</b> ▶ starts and ⏸ pauses, in the first column. Blue is your estimate and black is the time spent.</li>
 <li><b>Edit</b> by clicking a row (not the checkbox or timer). Set priority, due date, estimated and actual duration, recurring (daily, weekly, monthly), passive and notes. Save keeps changes, Cancel discards them, and the red trash icon deletes.</li>
 <li><b>Done?</b> moves a task to Finished tasks, newest first. Untick it there to bring it back. Recurring tasks leave a history entry (only its actual duration can be edited) and reappear at midnight on their next date.</li>
-<li>The <b>totals</b> above the list split estimated time between active and passive tasks. On Finished tasks, the 7-day averages each have a graph icon that opens a chart.</li>
+<li>The <b>totals</b> above the list split estimated time left between active and passive tasks. On Finished tasks, the 7-day averages each have a graph icon that opens a chart.</li>
 <li><b>Backup:</b> Export shows your data to copy. Import restores it from a file or pasted text.</li>
 </ol>
 </div></div>
@@ -206,7 +206,7 @@ function cmp(a,b,k,d){var x=val(a,k),y=val(b,k);if(x===null&&y===null)return 0;i
 function sorted(list){var s=sortS[tab];return list.slice().sort(function(a,b){
 var r=s.k==='auto'?0:cmp(a,b,s.k,s.d);
 return r||cmp(a,b,'due',1)||((b.priority||3)-(a.priority||3))||cmp(a,b,'name',1)})}
-function stats(){var a=0,p=0,n=0;state.tasks.forEach(function(t){if(t.done||t.hiddenUntil)return;n++;var e=+t.est||0;if(t.passive)p+=e;else a+=e});
+function stats(){var a=0,p=0,n=0;state.tasks.forEach(function(t){if(t.done||t.hiddenUntil)return;n++;var e=Math.max(0,(+t.est||0)-el(t)/60000);if(t.passive)p+=e;else a+=e});
 $('sA').textContent=hm(a);$('sP').textContent=hm(p);$('sN').textContent=n;$('sN').style.color=n===0?'#9b4fd8':n<=5?'#2f80ed':n<=10?'#2e9e4f':n<=15?'#d9a400':n<=20?'#f08a24':'#e0312f';
 var sa=0,sp=0,sn=0,nd=0;dayData().forEach(function(x){sa+=x.a;sp+=x.p;sn+=x.n;if(x.n)nd++});nd=Math.max(1,nd);
 $('gA').textContent=(sa/nd).toFixed(1)+' h';$('gP').textContent=(sp/nd).toFixed(1)+' h';$('gN').textContent=(sn/nd).toFixed(1)}
@@ -238,7 +238,7 @@ if(a.dataset.act==='done'){if(!t.done)complete(t);else{t.done=false;t.completedA
 else{if(t.running){t.elapsed=el(t);t.running=null}else t.running=Date.now()}
 save();render()});
 setInterval(function(){var d=iso(new Date());if(wake()||d!==lastDay){lastDay=d;render();return}
-document.querySelectorAll('[data-el]').forEach(function(c){var t=find(c.dataset.el);if(t)c.textContent=fmt(el(t))})},1000);
+document.querySelectorAll('[data-el]').forEach(function(c){var t=find(c.dataset.el);if(t)c.textContent=fmt(el(t))});stats()},1000);
 document.querySelectorAll('.tab').forEach(function(b){b.onclick=function(){tab=b.dataset.tab;document.querySelectorAll('.tab').forEach(function(x){x.setAttribute('aria-selected',x===b)});render()}});
 
 function openEd(id){var t=id?find(id):null;editId=id;
