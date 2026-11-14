@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-          <link rel="icon" href="favicon.ico">
+         <link rel="icon" href="favicon.ico">
   <link rel="manifest" href="site.webmanifest">
-  </head>
+  </head>  
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Task Board</title>
@@ -100,8 +100,9 @@ textarea.nt{min-height:70px;font:inherit;font-size:.95rem}
 <button class="btn pri" id="add">+ Add a task</button>
 <div class="stats" id="stats">
 <div id="sTop">Tasks Left: <b id="sN"></b></div>
-<span>Total Estimated Time Left (Active Tasks): <b id="sA"></b></span>
-<span>Total Estimated Time Left (Passive Tasks): <b id="sP"></b></span>
+<span>Est. Time Left (Active Tasks Due Today): <b id="sD"></b></span>
+<span>Est. Time Left (Active Tasks): <b id="sA"></b></span>
+<span>Est. Time Left (Passive Tasks): <b id="sP"></b></span>
 </div>
 <div class="stats" id="stats2" hidden>
 <span><button class="gi" data-g="a" aria-label="Show 7-day graph"><svg viewBox="0 0 16 16" width="16" height="16" fill="currentColor" aria-hidden="true"><rect x="1" y="8" width="3" height="7"/><rect x="6" y="3" width="3" height="12"/><rect x="11" y="6" width="3" height="9"/></svg></button>Average active task hours per day: <b id="gA"></b></span>
@@ -127,7 +128,8 @@ textarea.nt{min-height:70px;font:inherit;font-size:.95rem}
 <label><input type="radio" name="rc" value="daily" checked>Daily</label>
 <label><input type="radio" name="rc" value="weekly">Weekly</label>
 <label><input type="radio" name="rc" value="monthly">Monthly</label></div>
-<label class="ck"><input type="checkbox" id="fPs"> Passive task</label>
+<label class="ck"><input type="checkbox" id="fPs"> Passive Time</label>
+<div id="psBox" hidden><label for="fPc" style="margin-top:6px">Passive share of the time: <b id="fPv">50</b>%</label><input type="range" id="fPc" min="0" max="100" step="5" value="50" style="width:100%"></div>
 <label for="fNo">Notes</label><textarea class="nt" id="fNo"></textarea>
 <div class="err" id="fErr"></div>
 <div class="acts"><button class="btn" id="fCan">Cancel</button><button class="btn pri" id="fSav">Save</button></div>
@@ -159,9 +161,9 @@ textarea.nt{min-height:70px;font:inherit;font-size:.95rem}
 <li>The list is sorted by due date, then priority. Click any header to sort ascending or descending.</li>
 <li><b>Task &amp; Due</b> shows days left above the task name. 0 days (red) means due today or overdue.</li>
 <li><b>Timer:</b> ▶ starts and ⏸ pauses, in the first column. Blue is your estimate and black is the time spent.</li>
-<li><b>Edit</b> by clicking a row (not the checkbox or timer). Set priority, due date, estimated and actual duration, recurring (daily, weekly, monthly), passive and notes. Save keeps changes, Cancel discards them, and the red trash icon deletes.</li>
+<li><b>Edit</b> by clicking a row (not the checkbox or timer). Set priority, due date, estimated and actual duration, recurring (daily, weekly, monthly), Passive Time (a slider sets what percentage of the task’s time is passive) and notes. Save keeps changes, Cancel discards them, and the red trash icon deletes.</li>
 <li><b>Done?</b> moves a task to Finished tasks, newest first. Untick it there to bring it back. Recurring tasks leave a history entry (only its actual duration can be edited) and reappear at midnight on their next date.</li>
-<li>The <b>totals</b> above the list split estimated time left between active and passive tasks. On Finished tasks, the 7-day averages each have a graph icon that opens a chart.</li>
+<li>The <b>totals</b> above the list split estimated time left between active and passive time, plus the active time left on tasks due today. On Finished tasks, the 7-day averages each have a graph icon that opens a chart.</li>
 <li><b>Backup:</b> Export shows your data to copy. Import restores it from a file or pasted text.</li>
 </ol>
 </div></div>
@@ -180,8 +182,9 @@ function el(t){return (t.elapsed||0)+(t.running?Date.now()-t.running:0)}
 function fmt(ms){var s=Math.floor(ms/1000),h=Math.floor(s/3600),m=Math.floor(s%3600/60);s%=60;return (h<10?'0':'')+h+':'+(m<10?'0':'')+m+':'+(s<10?'0':'')+s}
 function p2(n){return (n<10?'0':'')+n}
 function rotIcon(c,t){return '<svg class="rot" viewBox="3 3 14 14" width="18" height="18" fill="none" stroke="currentColor" style="color:'+c+'" role="img" aria-label="'+t+'"><title>'+t+'</title><path d="M5.77 8.46A4.5 4.5 0 0 1 13.45 7.11M14.23 11.54A4.5 4.5 0 0 1 6.55 12.89" stroke-width="1.5" stroke-linecap="round"/><polygon fill="currentColor" stroke="none" points="14.74,8.64 14.83,5.95 12.07,8.27"/><polygon fill="currentColor" stroke="none" points="5.26,11.36 5.17,14.05 7.93,11.73"/></svg>'}
+function pf(t){return t.passive?(t.passivePct==null?100:t.passivePct)/100:0}
 function dayData(){var r=[],s=sod(Date.now()),i,d;for(i=6;i>=0;i--){d=new Date(s);d.setDate(d.getDate()-i);r.push({k:iso(d),lab:MON[d.getMonth()]+' '+d.getDate(),a:0,p:0,n:0})}
-state.tasks.forEach(function(t){if(!t.done||!t.completedAt)return;var k=iso(new Date(t.completedAt)),x=r.find(function(y){return y.k===k});if(!x)return;x.n++;var h=el(t)/36e5;if(t.passive)x.p+=h;else x.a+=h});return r}
+state.tasks.forEach(function(t){if(!t.done||!t.completedAt)return;var k=iso(new Date(t.completedAt)),x=r.find(function(y){return y.k===k});if(!x)return;x.n++;var h=el(t)/36e5,f=pf(t);x.p+=h*f;x.a+=h*(1-f)});return r}
 function iso(d){return d.getFullYear()+'-'+p2(d.getMonth()+1)+'-'+p2(d.getDate())}
 function sod(n){var d=new Date(n);d.setHours(0,0,0,0);return d}
 function fdate(d){return d?d.slice(2,4)+MON[+d.slice(5,7)-1]+d.slice(8,10):'—'}
@@ -197,7 +200,7 @@ function step(d,r){if(r==='weekly')d.setDate(d.getDate()+7);else if(r==='monthly
 function wake(){var ch=false,n=Date.now();state.tasks.forEach(function(t){if(t.hiddenUntil&&n>=t.hiddenUntil){t.hiddenUntil=null;t.done=false;ch=true;
 if(t.due){var d=new Date(t.due+'T00:00'),s=sod(n),i=0;while(d<s&&i<800){step(d,t.recur);i++}t.due=iso(d)}}});if(ch)save();return ch}
 function complete(t){if(t.running){t.elapsed=el(t);t.running=null}
-if(t.recurring){state.tasks.push({id:Date.now().toString(36)+Math.random().toString(36).slice(2,6),name:t.name,priority:t.priority,due:t.due,est:t.est,elapsed:t.elapsed||0,running:null,done:true,completedAt:Date.now(),hist:true,recurring:true,recur:t.recur,passive:t.passive,notes:t.notes||''});
+if(t.recurring){state.tasks.push({id:Date.now().toString(36)+Math.random().toString(36).slice(2,6),name:t.name,priority:t.priority,due:t.due,est:t.est,elapsed:t.elapsed||0,running:null,done:true,completedAt:Date.now(),hist:true,recurring:true,recur:t.recur,passive:t.passive,passivePct:t.passivePct,notes:t.notes||''});
 t.elapsed=0;t.hiddenUntil=nextRecur(t).getTime()}
 else{t.done=true;t.completedAt=Date.now()}}
 
@@ -206,8 +209,8 @@ function cmp(a,b,k,d){var x=val(a,k),y=val(b,k);if(x===null&&y===null)return 0;i
 function sorted(list){var s=sortS[tab];return list.slice().sort(function(a,b){
 var r=s.k==='auto'?0:cmp(a,b,s.k,s.d);
 return r||cmp(a,b,'due',1)||((b.priority||3)-(a.priority||3))||cmp(a,b,'name',1)})}
-function stats(){var a=0,p=0,n=0;state.tasks.forEach(function(t){if(t.done||t.hiddenUntil)return;n++;var e=Math.max(0,(+t.est||0)-el(t)/60000);if(t.passive)p+=e;else a+=e});
-$('sA').textContent=hm(a);$('sP').textContent=hm(p);$('sN').textContent=n;$('sN').style.color=n===0?'#9b4fd8':n<=5?'#2f80ed':n<=10?'#2e9e4f':n<=15?'#d9a400':n<=20?'#f08a24':'#e0312f';
+function stats(){var a=0,p=0,n=0,dd=0,td=iso(new Date());state.tasks.forEach(function(t){if(t.done||t.hiddenUntil)return;n++;var e=Math.max(0,(+t.est||0)-el(t)/60000);var f=pf(t);p+=e*f;a+=e*(1-f);if(t.due&&t.due<=td)dd+=e*(1-f)});
+$('sD').textContent=hm(dd);$('sA').textContent=hm(a);$('sP').textContent=hm(p);$('sN').textContent=n;$('sN').style.color=n===0?'#9b4fd8':n<=5?'#2f80ed':n<=10?'#2e9e4f':n<=15?'#d9a400':n<=20?'#f08a24':'#e0312f';
 var sa=0,sp=0,sn=0,nd=0;dayData().forEach(function(x){sa+=x.a;sp+=x.p;sn+=x.n;if(x.n)nd++});nd=Math.max(1,nd);
 $('gA').textContent=(sa/nd).toFixed(1)+' h';$('gP').textContent=(sp/nd).toFixed(1)+' h';$('gN').textContent=(sn/nd).toFixed(1)}
 function render(){
@@ -246,10 +249,11 @@ $('edT').textContent=t?(t.hist?'Edit finished task':'Edit task'):'Add a task';
 $('fN').value=t?t.name:'';$('fP').value=t?t.priority:3;$('fD').value=t?t.due||'':'';
 setHM('fEh','fEm',t?t.est:'');origA=t?Math.round(el(t)/60000):null;setHM('fAh','fAm',origA===null?'':origA);
 $('fR').checked=!!(t&&t.recurring);document.querySelector('input[name=rc][value='+(t&&t.recur?t.recur:'daily')+']').checked=true;$('seg').hidden=!$('fR').checked;
-$('fPs').checked=!!(t&&t.passive);$('fNo').value=t&&t.notes?t.notes:'';
-var lock=!!(t&&t.hist);['fN','fP','fD','fEh','fEm','fR','fPs','fNo'].forEach(function(i){$(i).disabled=lock});document.querySelectorAll('input[name=rc]').forEach(function(r){r.disabled=lock});
+$('fPs').checked=!!(t&&t.passive);$('fPc').value=t&&t.passive?(t.passivePct!=null?t.passivePct:100):50;$('fPv').textContent=$('fPc').value;$('psBox').hidden=!$('fPs').checked;$('fNo').value=t&&t.notes?t.notes:'';
+var lock=!!(t&&t.hist);['fN','fP','fD','fEh','fEm','fR','fPs','fPc','fNo'].forEach(function(i){$(i).disabled=lock});document.querySelectorAll('input[name=rc]').forEach(function(r){r.disabled=lock});
 $('fErr').textContent='';$('fDel').hidden=!t||lock;$('edOv').hidden=false;$(lock?'fAh':'fN').focus()}
 $('fR').onchange=function(){$('seg').hidden=!this.checked};
+$('fPs').onchange=function(){$('psBox').hidden=!this.checked};$('fPc').oninput=function(){$('fPv').textContent=this.value};
 $('add').onclick=function(){openEd(null)};
 $('fCan').onclick=function(){$('edOv').hidden=true};
 $('fSav').onclick=function(){
@@ -260,7 +264,7 @@ if(!t){t={id:Date.now().toString(36)+Math.random().toString(36).slice(2,6),elaps
 t.name=n;t.priority=parseInt($('fP').value,10)||3;t.due=$('fD').value||'';
 var e=getHM('fEh','fEm');t.est=e===null?'':e;
 var m=getHM('fAh','fAm');if(m!==null&&m!==origA){t.elapsed=m*60000;if(t.running)t.running=Date.now()}
-t.recurring=$('fR').checked;t.recur=document.querySelector('input[name=rc]:checked').value;t.passive=$('fPs').checked;t.notes=$('fNo').value;
+t.recurring=$('fR').checked;t.recur=document.querySelector('input[name=rc]:checked').value;t.passive=$('fPs').checked;t.passivePct=+$('fPc').value;t.notes=$('fNo').value;
 save();$('edOv').hidden=true;render()};
 $('fDel').onclick=function(){$('cfOv').hidden=false};
 $('cfN').onclick=function(){$('cfOv').hidden=true};
@@ -278,7 +282,7 @@ $('ioF').onchange=function(){var f=this.files[0];if(!f)return;var r=new FileRead
 $('ioA').onclick=function(){
 if(ioMode==='x'){var x=$('ioX');x.select();try{navigator.clipboard.writeText(x.value).then(function(){$('ioE').textContent='Copied.'},function(){document.execCommand('copy');$('ioE').textContent='Copied.'})}catch(e){document.execCommand('copy');$('ioE').textContent='Copied.'}return}
 try{var o=JSON.parse($('ioX').value);if(!o||!Array.isArray(o.tasks))throw 0;
-state={tasks:o.tasks.filter(function(t){return t&&t.name}).map(function(t,i){return{id:String(t.id||('i'+i+Date.now())),name:String(t.name),priority:+t.priority>=1&&+t.priority<=5?+t.priority:3,due:t.due||'',est:t.est===undefined?'':t.est,elapsed:+t.elapsed||0,running:t.running?+t.running:null,done:!!t.done,completedAt:t.completedAt||null,recurring:!!t.recurring,recur:['daily','weekly','monthly'].indexOf(t.recur)>-1?t.recur:'daily',passive:!!t.passive,notes:t.notes?String(t.notes):'',hist:!!t.hist,hiddenUntil:t.hiddenUntil?+t.hiddenUntil:null,created:+t.created||Date.now()}})};
+state={tasks:o.tasks.filter(function(t){return t&&t.name}).map(function(t,i){return{id:String(t.id||('i'+i+Date.now())),name:String(t.name),priority:+t.priority>=1&&+t.priority<=5?+t.priority:3,due:t.due||'',est:t.est===undefined?'':t.est,elapsed:+t.elapsed||0,running:t.running?+t.running:null,done:!!t.done,completedAt:t.completedAt||null,recurring:!!t.recurring,recur:['daily','weekly','monthly'].indexOf(t.recur)>-1?t.recur:'daily',passive:!!t.passive,passivePct:t.passivePct==null?null:+t.passivePct,notes:t.notes?String(t.notes):'',hist:!!t.hist,hiddenUntil:t.hiddenUntil?+t.hiddenUntil:null,created:+t.created||Date.now()}})};
 save();$('ioOv').hidden=true;render()}catch(e){$('ioE').textContent='That backup could not be read. Check that you pasted the full text.'}};
 $('info').onclick=function(){$('inOv').hidden=false};$('inC').onclick=function(){$('inOv').hidden=true};
 document.addEventListener('keydown',function(e){if(e.key==='Escape')document.querySelectorAll('.ov').forEach(function(o){o.hidden=true})});
