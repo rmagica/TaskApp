@@ -1,7 +1,8 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
-         <link rel="icon" href="favicon.ico">
+          <link rel="icon" href="favicon.ico">
   <link rel="manifest" href="site.webmanifest">
   </head>
 <meta charset="utf-8">
@@ -79,7 +80,9 @@ textarea.nt{min-height:70px;font:inherit;font-size:.95rem}
 .info ol{padding-left:20px;margin:0}.info li{margin-bottom:.4em}
 .gi{background:none;border:1px solid var(--line);border-radius:6px;padding:3px 5px;margin-right:6px;cursor:pointer;color:var(--accent);vertical-align:middle;line-height:0}.gi:hover{background:var(--hover)}
 #stats2{flex-direction:column;gap:6px;font-size:.85rem}
-#add{flex:none;align-self:center;margin:0 0 14px}
+#add,#catBtn{flex:none;align-self:center;margin:0 0 14px}
+tr[data-cat]{user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+.edp #fCr{padding:3px 8px;font-size:.9em;white-space:nowrap}
 .edp{font-size:min(15px,2.1vh);padding:12px 14px}
 .edp h2{font-size:1.15em}.edp .ph{margin-bottom:4px}
 .edp label{margin:6px 0 2px;font-size:.85em}.edp label.ck{margin:6px 0 2px}.edp .row>label{flex:1}
@@ -111,7 +114,6 @@ table.cat th,table.cat td{padding:10px 6px}table.cat td.name{min-width:80px}td.h
 <button class="tab" role="tab" data-tab="done" aria-selected="false">Finished tasks</button>
 </div>
 <div class="bar" id="bar">
-<button class="btn" id="catBtn" aria-pressed="false" hidden>By Category</button>
 <div class="stats" id="stats">
 <div id="sTop">Tasks Left: <b id="sN"></b></div>
 <span>Est. Time Left (Active Tasks Due Today): <b id="sD"></b></span>
@@ -127,6 +129,7 @@ table.cat th,table.cat td{padding:10px 6px}table.cat td.name{min-width:80px}td.h
 </div>
 <div class="wrap"><table id="tbl"></table></div>
 <button class="btn pri" id="add">+ Add a task</button>
+<button class="btn" id="catBtn" aria-pressed="false" hidden>By Category</button>
 </main>
 
 <div class="ov" id="edOv" hidden><div class="panel edp">
@@ -145,7 +148,8 @@ table.cat th,table.cat td{padding:10px 6px}table.cat td.name{min-width:80px}td.h
 <label><input type="radio" name="rc" value="weekly">Weekly</label>
 <label><input type="radio" name="rc" value="monthly">Monthly</label></div>
 <div id="psBox" hidden><label for="fPc" style="margin-top:6px">Passive share of the time: <b id="fPv">50</b>%</label><input type="range" id="fPc" min="0" max="100" step="5" value="50" style="width:100%"></div>
-<label for="fC">Category</label><select id="fC"></select>
+<label for="fC">Category</label>
+<div style="display:flex;gap:6px"><select id="fC" style="flex:1;min-width:0"></select><button class="btn" id="fCr" type="button" aria-label="Rename this category" title="Rename this category" hidden>✎ Rename</button></div>
 <input type="text" id="fCn" placeholder="New category name" maxlength="60" style="margin-top:6px" hidden>
 <label for="fNo">Notes</label><textarea class="nt" id="fNo"></textarea>
 <div class="err" id="fErr"></div>
@@ -165,6 +169,13 @@ table.cat th,table.cat td{padding:10px 6px}table.cat td.name{min-width:80px}td.h
 <div class="acts"><button class="btn" id="ioC">Close</button><button class="btn pri" id="ioA"></button></div>
 </div></div>
 
+<div class="ov" id="rnOv" hidden><div class="panel" style="max-width:340px">
+<div class="ph"><h2>Rename category</h2><button class="x" id="rnX" aria-label="Close">✕</button></div>
+<input type="text" id="rnI" maxlength="60" aria-label="Category name">
+<div class="err" id="rnE"></div>
+<div class="acts"><button class="btn" id="rnC">Cancel</button><button class="btn pri" id="rnS">Save</button></div>
+</div></div>
+
 <div class="ov" id="gOv" hidden><div class="panel">
 <div class="ph"><h2 id="gT"></h2><button class="x" id="gC" aria-label="Close">✕</button></div>
 <p style="margin:0 0 6px;color:var(--muted);font-size:.85rem">Last 7 days, ending today</p><div id="gB"></div>
@@ -177,7 +188,7 @@ table.cat th,table.cat td{padding:10px 6px}table.cat td.name{min-width:80px}td.h
 <li><b>Priority</b> is worth 5 to 1 points: Urgent (red), High (orange), Medium (yellow), Low (light green), Optional (light blue). It shows as a dot before the name, or as two circling arrows for recurring tasks.</li>
 <li>The list is sorted by due date, then priority. Click any header to sort ascending or descending. <b>Task &amp; Due</b> shows days left above the task name. 0 days (red) means due today or overdue.</li>
 <li><b>Timer:</b> ▶ starts and ⏸ pauses, in the first column. Blue is your estimate and black is the time spent.</li>
-<li><b>Edit</b> by clicking a row (not the checkbox or timer). Set priority, due date, estimated and actual duration, recurring (daily, weekly, monthly), Passive Time (a slider sets what percentage of the task’s time is passive), a category and notes. Save keeps changes, Cancel discards them, and the red trash icon deletes.</li>
+<li><b>Edit</b> by clicking a row (not the checkbox or timer). Set priority, due date, estimated and actual duration, recurring (daily, weekly, monthly), Passive Time (a slider sets what percentage of the task’s time is passive), a category (the Rename button fixes its name everywhere) and notes. Save keeps changes, Cancel discards them, and the red trash icon deletes.</li>
 <li><b>Done?</b> moves a task to Finished tasks. A recurring task comes back as a fresh copy at midnight on its next date.</li>
 <li>The <b>totals</b> above the list show tasks left (coloured by how many), and the estimated time left split between active and passive time, including the active time left on tasks due today.</li>
 <li><b>Backup:</b> Export shows your data to copy. Import restores it from a file or pasted text.</li>
@@ -187,14 +198,14 @@ table.cat th,table.cat td{padding:10px 6px}table.cat td.name{min-width:80px}td.h
 <li>Untick <b>Done?</b> to send a task back to Current tasks. Click a row to edit any detail, including the actual time.</li>
 <li>A finished recurring task stays here until its next date. Then a fresh copy appears in Current tasks and this entry stops recurring.</li>
 <li>The three <b>averages</b> cover the last 7 days (days with no tracked time or completions are left out). Tap the graph icon in front of one to see its 7-day chart.</li>
-<li><b>By Category</b> switches the list to totals per category. Hrs is the total time spent, and the blue line fills at 100 hours. Tasks without a category are grouped as Uncategorised.</li>
-<li><b>Tap a category</b> to show its own 7-day averages and graphs above the table. Tap it again to go back to all tasks. Press By Category again to return to the task list.</li>
+<li>The <b>By Category</b> button below the list switches it to totals per category. Hrs is the total time spent, and the blue line fills at 100 hours. Tasks without a category are grouped as Uncategorised.</li>
+<li><b>Tap a category</b> to show its own 7-day averages and graphs above the table. Tap it again to go back to all tasks. Press and hold a category name to rename it. Press By Category again to return to the task list.</li>
 <li><b>Backup:</b> Export shows your data to copy. Import restores it from a file or pasted text.</li>
 </ol>
 </div></div>
 
 <script>
-var KEY='taskboard-v1',state={tasks:[]},tab='cur',editId=null,origA=null,lastDay='',catView=false,selCat=null,selName='';
+var KEY='taskboard-v1',state={tasks:[]},tab='cur',editId=null,origA=null,lastDay='',catView=false,selCat=null,selName='',renOld=null,rnOld='',lpT=null,lpFired=false;
 var sortS={cur:{k:'auto',d:1},done:{k:'completedAt',d:-1},cat:{k:'hours',d:-1}};
 var PR={5:['Urgent','var(--p5)'],4:['High','var(--p4)'],3:['Medium','var(--p3)'],2:['Low','var(--p2)'],1:['Optional','var(--p1)']};
 var MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
@@ -278,6 +289,7 @@ $('tbl').className='';chrome(done);
 $('tbl').addEventListener('click',function(e){
 var th=e.target.closest('th');
 if(th){var k=th.dataset.k,s=sortS[tab==='done'&&catView?'cat':tab];if(s.k===k)s.d=-s.d;else{s.k=k;s.d=1}render();return}
+if(lpFired){lpFired=false;return}
 var cr=e.target.closest('tr[data-cat]');if(cr){var ck=cr.dataset.cat;if(selCat===ck){selCat=null;selName=''}else{selCat=ck;selName=cr.querySelector('.name').textContent}render();return}
 var tr=e.target.closest('tr[data-id]');if(!tr)return;
 var t=find(tr.dataset.id),a=e.target.closest('[data-act]');
@@ -290,12 +302,15 @@ setInterval(function(){var d=iso(new Date());if(wake()||d!==lastDay){lastDay=d;r
 document.querySelectorAll('[data-el]').forEach(function(c){var t=find(c.dataset.el);if(t)c.textContent=fmt(el(t))});stats()},1000);
 document.querySelectorAll('.tab').forEach(function(b){b.onclick=function(){tab=b.dataset.tab;document.querySelectorAll('.tab').forEach(function(x){x.setAttribute('aria-selected',x===b)});render()}});
 
+function updCat(){var v=$('fC').value;$('fCr').hidden=!v||v==='__new'}
+function renameCat(o,n){var ol=o.toLowerCase(),other=catList().find(function(c){var l=c.toLowerCase();return l===n.toLowerCase()&&l!==ol});if(other)n=other;
+state.tasks.forEach(function(t){if(t.cat&&t.cat.trim().toLowerCase()===ol)t.cat=n});if(selCat===ol){selCat=n.toLowerCase();selName=n}return n}
 function ckeyOf(t){return t.cat&&t.cat.trim()?t.cat.trim().toLowerCase():'__none'}
 function catList(){var seen={},r=[];state.tasks.forEach(function(t){var c=t.cat?t.cat.trim():'';if(c&&!seen[c.toLowerCase()]){seen[c.toLowerCase()]=1;r.push(c)}});return r.sort(function(a,b){return a.toLowerCase()<b.toLowerCase()?-1:1})}
 function existingCat(n){if(!n)return '';var m=catList().find(function(c){return c.toLowerCase()===n.toLowerCase()});return m||n}
 function fillCats(cur){var sel=$('fC');sel.innerHTML='';function add(v,t){var o=document.createElement('option');o.value=v;o.textContent=t;sel.appendChild(o)}
 add('','No category');catList().forEach(function(c){add(c,c)});add('__new','Add Category');
-sel.value=cur?existingCat(cur):'';if(sel.value!==(cur?existingCat(cur):''))sel.value='';$('fCn').value='';$('fCn').hidden=true}
+sel.value=cur?existingCat(cur):'';if(sel.value!==(cur?existingCat(cur):''))sel.value='';$('fCn').value='';$('fCn').hidden=true;renOld=null;updCat()}
 function openEd(id){var t=id?find(id):null;editId=id;
 $('edT').textContent=t?'Edit task':'Add a task';
 $('fN').value=t?t.name:'';$('fP').value=t?t.priority:3;$('fD').value=t?t.due||'':'';
@@ -304,7 +319,8 @@ $('fR').checked=!!(t&&t.recurring);document.querySelector('input[name=rc][value=
 $('fPs').checked=!!(t&&t.passive);$('fPc').value=t&&t.passive?(t.passivePct!=null?t.passivePct:100):50;$('fPv').textContent=$('fPc').value;$('psBox').hidden=!$('fPs').checked;$('fNo').value=t&&t.notes?t.notes:'';fillCats(t?t.cat:'');
 $('fErr').textContent='';$('fDel').hidden=!t;$('edOv').hidden=false;$('fN').focus()}
 $('fR').onchange=function(){$('seg').hidden=!this.checked};
-$('fPs').onchange=function(){$('psBox').hidden=!this.checked};$('fC').onchange=function(){$('fCn').hidden=this.value!=='__new';if(!$('fCn').hidden)$('fCn').focus()};$('fPc').oninput=function(){$('fPv').textContent=this.value};
+$('fPs').onchange=function(){$('psBox').hidden=!this.checked};$('fC').onchange=function(){renOld=null;$('fCn').value='';$('fCn').placeholder='New category name';$('fCn').hidden=this.value!=='__new';updCat();if(!$('fCn').hidden)$('fCn').focus()};
+$('fCr').onclick=function(){renOld=$('fC').value;$('fCn').placeholder='Rename category';$('fCn').value=renOld;$('fCn').hidden=false;$('fCn').focus();$('fCn').select()};$('fPc').oninput=function(){$('fPv').textContent=this.value};
 $('add').onclick=function(){openEd(null)};
 $('fCan').onclick=function(){$('edOv').hidden=true};
 $('fSav').onclick=function(){
@@ -314,7 +330,7 @@ if(!t){t={id:Date.now().toString(36)+Math.random().toString(36).slice(2,6),elaps
 t.name=n;t.priority=parseInt($('fP').value,10)||3;t.due=$('fD').value||'';
 var e=getHM('fEh','fEm');t.est=e===null?'':e;
 var m=getHM('fAh','fAm');if(m!==null&&m!==origA){var old=el(t),nw=Date.now(),L=t.log||(t.log={});if(t.running)addSpan(L,t.running,nw);t.elapsed=m*60000;if(t.running)t.running=nw;var dl=t.elapsed-old;if(dl>0){var tk=iso(new Date(nw));L[tk]=(L[tk]||0)+dl}}
-t.recurring=$('fR').checked;t.recur=document.querySelector('input[name=rc]:checked').value;t.passive=$('fPs').checked;t.passivePct=+$('fPc').value;t.nextAt=t.done&&t.recurring?nextRecur(t).getTime():null;t.notes=$('fNo').value;var cv=$('fC').value;t.cat=cv==='__new'?existingCat($('fCn').value.trim()):cv;
+t.recurring=$('fR').checked;t.recur=document.querySelector('input[name=rc]:checked').value;t.passive=$('fPs').checked;t.passivePct=+$('fPc').value;t.nextAt=t.done&&t.recurring?nextRecur(t).getTime():null;t.notes=$('fNo').value;var cv=$('fC').value;if(renOld&&cv===renOld&&!$('fCn').hidden){var nn=$('fCn').value.trim();if(nn)cv=renameCat(renOld,nn)}t.cat=cv==='__new'?existingCat($('fCn').value.trim()):cv;
 save();$('edOv').hidden=true;render()};
 $('fDel').onclick=function(){$('cfOv').hidden=false};
 $('cfN').onclick=function(){$('cfOv').hidden=true};
@@ -348,6 +364,16 @@ if(x[g]>0)s+='<text x="'+(bx+bw*.3)+'" y="'+(y-3)+'" text-anchor="middle" style=
 s+='<text x="'+(bx+bw*.3)+'" y="'+(H-12)+'" text-anchor="middle" style="fill:var(--muted)">'+x.lab+'</text>'});
 $('gT').textContent=T[0]+(catView&&selCat?': '+selName:'');$('gB').innerHTML=s+'</svg>';$('gOv').hidden=false}
 document.querySelectorAll('.gi').forEach(function(b){b.onclick=function(){openGraph(b.dataset.g)}});$('gC').onclick=function(){$('gOv').hidden=true};
+var lpX=0,lpY=0;
+function lpClear(){if(lpT){clearTimeout(lpT);lpT=null}}
+$('tbl').addEventListener('pointerdown',function(e){lpClear();var td=e.target.closest('td.name'),r=td&&td.closest('tr[data-cat]');if(!r||r.dataset.cat==='__none')return;lpX=e.clientX;lpY=e.clientY;
+lpT=setTimeout(function(){lpT=null;lpFired=true;rnOld=td.textContent;$('rnI').value=rnOld;$('rnE').textContent='';$('rnOv').hidden=false;$('rnI').focus();$('rnI').select()},600)});
+['pointerup','pointercancel','pointerleave'].forEach(function(n){$('tbl').addEventListener(n,lpClear)});
+$('tbl').addEventListener('pointermove',function(e){if(lpT&&(Math.abs(e.clientX-lpX)>8||Math.abs(e.clientY-lpY)>8))lpClear()});
+$('tbl').addEventListener('contextmenu',function(e){if(e.target.closest('tr[data-cat]'))e.preventDefault()});
+function rnClose(){$('rnOv').hidden=true}
+$('rnC').onclick=rnClose;$('rnX').onclick=rnClose;
+$('rnS').onclick=function(){var nn=$('rnI').value.trim();if(!nn){$('rnE').textContent='Enter a name for the category.';return}renameCat(rnOld,nn);save();rnClose();render()};
 $('catBtn').onclick=function(){catView=!catView;selCat=null;selName='';render()};
 load();state.tasks.forEach(function(t){if(t.hist){t.hist=false;t.recurring=false}});wake();lastDay=iso(new Date());render();
 </script>
