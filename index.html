@@ -3,7 +3,7 @@
 <head>
          <link rel="icon" href="favicon.ico">
   <link rel="manifest" href="site.webmanifest">
-  </head>  
+  </head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Task Board</title>
@@ -17,13 +17,15 @@ html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
 [hidden]{display:none!important}
 body{margin:0;height:100%;background:var(--bg);color:var(--ink);font:16px/1.4 "Trebuchet MS","Segoe UI",system-ui,sans-serif}
 main{height:100%;display:flex;flex-direction:column;padding:12px 14px 0}
-header{flex:none;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:8px}
+header{flex:none;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:nowrap;margin-bottom:8px}
 h1{font:700 1.5rem/1.1 Georgia,"Times New Roman",serif;margin:0}
 button,input,select,textarea{font:inherit;color:inherit}
 .btn{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:7px 12px;cursor:pointer}
 .btn:hover{background:var(--hover)}
+.ib{width:34px;height:34px;border-radius:50%;padding:0;font:italic 700 1.15rem Georgia,serif;line-height:1;display:inline-flex;align-items:center;justify-content:center}
 .btn.pri{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:600}
-.tools{display:flex;gap:6px}
+.tools{display:flex;gap:6px;flex:none}h1{white-space:nowrap}
+@media (max-width:400px){h1{font-size:1.25rem}.tools .btn:not(.ib){padding:6px 9px;font-size:.88rem}}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .tabs{flex:none;display:flex;gap:4px;border-bottom:2px solid var(--line);margin-bottom:10px}
 .tab{background:none;border:0;padding:8px 16px;cursor:pointer;color:var(--muted);border-bottom:3px solid transparent;margin-bottom:-2px;font-weight:600}
@@ -77,6 +79,18 @@ textarea.nt{min-height:70px;font:inherit;font-size:.95rem}
 .info ol{padding-left:20px;margin:0}.info li{margin-bottom:.4em}
 .gi{background:none;border:1px solid var(--line);border-radius:6px;padding:3px 5px;margin-right:6px;cursor:pointer;color:var(--accent);vertical-align:middle;line-height:0}.gi:hover{background:var(--hover)}
 #stats2{flex-direction:column;gap:6px;font-size:.85rem}
+#add{flex:none;align-self:center;margin:0 0 14px}
+.edp{font-size:min(15px,2.1vh);padding:12px 14px}
+.edp h2{font-size:1.15em}.edp .ph{margin-bottom:4px}
+.edp label{margin:6px 0 2px;font-size:.85em}.edp label.ck{margin:6px 0 2px}.edp .row>label{flex:1}
+.edp input[type=text],.edp input[type=date],.edp input[type=number],.edp select,.edp textarea{padding:5px 8px;font-size:1em}
+.edp textarea.nt{min-height:0;height:3.4em;font-size:1em}
+.edp .seg{margin:2px 0}.edp .seg label{padding:3px;margin:0}
+.edp .acts{margin-top:8px}.edp .err{min-height:0;margin-top:2px}
+.btn[aria-pressed=true]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:600}
+tr.sel{background:var(--hover)}tr[data-cat]{cursor:pointer}tr[data-cat]:hover{background:var(--hover)}
+td.lw{min-width:70px;width:34%}
+table.cat th,table.cat td{padding:10px 6px}table.cat td.name{min-width:80px}td.hr{width:1%;text-align:right}table.cat th:nth-child(2){text-align:right}.line{height:8px;border-radius:4px;background:var(--line)}.line i{display:block;height:100%;background:var(--blue);border-radius:4px}
 #stats{flex:1 1 240px;flex-direction:column;flex-wrap:nowrap;gap:2px}
 #sTop{text-align:center;font-size:1.3rem;font-weight:700}
 #stats span{text-align:center}
@@ -89,7 +103,7 @@ textarea.nt{min-height:70px;font:inherit;font-size:.95rem}
 <div class="tools">
 <button class="btn" id="exp">Export</button>
 <button class="btn" id="imp">Import</button>
-<button class="btn" id="info" aria-label="How to use this app">ⓘ Info</button>
+<button class="btn ib" id="info" aria-label="How to use this tab" title="How to use this tab">i</button>
 </div>
 </header>
 <div class="tabs" role="tablist">
@@ -97,7 +111,7 @@ textarea.nt{min-height:70px;font:inherit;font-size:.95rem}
 <button class="tab" role="tab" data-tab="done" aria-selected="false">Finished tasks</button>
 </div>
 <div class="bar" id="bar">
-<button class="btn pri" id="add">+ Add a task</button>
+<button class="btn" id="catBtn" aria-pressed="false" hidden>By Category</button>
 <div class="stats" id="stats">
 <div id="sTop">Tasks Left: <b id="sN"></b></div>
 <span>Est. Time Left (Active Tasks Due Today): <b id="sD"></b></span>
@@ -105,15 +119,17 @@ textarea.nt{min-height:70px;font:inherit;font-size:.95rem}
 <span>Est. Time Left (Passive Tasks): <b id="sP"></b></span>
 </div>
 <div class="stats" id="stats2" hidden>
+<div id="catLbl" hidden style="font-weight:700;color:var(--ink)"></div>
 <span><button class="gi" data-g="a" aria-label="Show 7-day graph"><svg viewBox="0 0 16 16" width="16" height="16" fill="currentColor" aria-hidden="true"><rect x="1" y="8" width="3" height="7"/><rect x="6" y="3" width="3" height="12"/><rect x="11" y="6" width="3" height="9"/></svg></button>Average active task hours per day: <b id="gA"></b></span>
 <span><button class="gi" data-g="p" aria-label="Show 7-day graph"><svg viewBox="0 0 16 16" width="16" height="16" fill="currentColor" aria-hidden="true"><rect x="1" y="8" width="3" height="7"/><rect x="6" y="3" width="3" height="12"/><rect x="11" y="6" width="3" height="9"/></svg></button>Average passive tasks hours per day: <b id="gP"></b></span>
 <span><button class="gi" data-g="n" aria-label="Show 7-day graph"><svg viewBox="0 0 16 16" width="16" height="16" fill="currentColor" aria-hidden="true"><rect x="1" y="8" width="3" height="7"/><rect x="6" y="3" width="3" height="12"/><rect x="11" y="6" width="3" height="9"/></svg></button>Average completed tasks per day: <b id="gN"></b></span>
 </div>
 </div>
 <div class="wrap"><table id="tbl"></table></div>
+<button class="btn pri" id="add">+ Add a task</button>
 </main>
 
-<div class="ov" id="edOv" hidden><div class="panel">
+<div class="ov" id="edOv" hidden><div class="panel edp">
 <div class="ph"><h2 id="edT">Add a task</h2><button class="btn" id="fDel" aria-label="Delete task" title="Delete task" style="color:var(--danger);line-height:0;padding:8px" hidden><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14M10 10v7M14 10v7"/></svg></button></div>
 <label for="fN">Name</label><input type="text" id="fN" maxlength="200">
 <div class="row">
@@ -123,13 +139,14 @@ textarea.nt{min-height:70px;font:inherit;font-size:.95rem}
 <div class="row">
 <div><label>Estimated duration</label><div class="row"><input type="number" id="fEh" min="0" step="1" placeholder="hrs" aria-label="Estimated hours"><input type="number" id="fEm" min="0" step="1" placeholder="min" aria-label="Estimated minutes"></div></div>
 <div><label>Actual duration</label><div class="row"><input type="number" id="fAh" min="0" step="1" placeholder="hrs" aria-label="Actual hours"><input type="number" id="fAm" min="0" step="1" placeholder="min" aria-label="Actual minutes"></div></div></div>
-<label class="ck"><input type="checkbox" id="fR"> Recurring task</label>
+<div class="row"><label class="ck"><input type="checkbox" id="fR"> Recurring task</label><label class="ck"><input type="checkbox" id="fPs"> Passive Time</label></div>
 <div class="seg" id="seg" hidden>
 <label><input type="radio" name="rc" value="daily" checked>Daily</label>
 <label><input type="radio" name="rc" value="weekly">Weekly</label>
 <label><input type="radio" name="rc" value="monthly">Monthly</label></div>
-<label class="ck"><input type="checkbox" id="fPs"> Passive Time</label>
 <div id="psBox" hidden><label for="fPc" style="margin-top:6px">Passive share of the time: <b id="fPv">50</b>%</label><input type="range" id="fPc" min="0" max="100" step="5" value="50" style="width:100%"></div>
+<label for="fC">Category</label><select id="fC"></select>
+<input type="text" id="fCn" placeholder="New category name" maxlength="60" style="margin-top:6px" hidden>
 <label for="fNo">Notes</label><textarea class="nt" id="fNo"></textarea>
 <div class="err" id="fErr"></div>
 <div class="acts"><button class="btn" id="fCan">Cancel</button><button class="btn pri" id="fSav">Save</button></div>
@@ -154,23 +171,31 @@ textarea.nt{min-height:70px;font:inherit;font-size:.95rem}
 </div></div>
 
 <div class="ov" id="inOv" hidden><div class="panel info">
-<div class="ph"><h2>How to use Task Board</h2><button class="x" id="inC" aria-label="Close">✕</button></div>
-<ol>
-<li><b>Add a task</b> with “+ Add a task”. Only the name is required. Priority defaults to Medium and the due date to none.</li>
-<li><b>Priority</b> is worth 5 to 1 points: Urgent (red), High (orange), Medium (yellow), Low (light green), Optional (light blue). It shows as a dot before the name, or as two circling arrows in a circle for recurring tasks.</li>
-<li>The list is sorted by due date, then priority. Click any header to sort ascending or descending.</li>
-<li><b>Task &amp; Due</b> shows days left above the task name. 0 days (red) means due today or overdue.</li>
+<div class="ph"><h2 id="inT">How to use: Current tasks</h2><button class="x" id="inC" aria-label="Close">✕</button></div>
+<ol id="inCur">
+<li><b>Add a task</b> with the “+ Add a task” button below the list. Only the name is required. Priority defaults to Medium and the due date to none.</li>
+<li><b>Priority</b> is worth 5 to 1 points: Urgent (red), High (orange), Medium (yellow), Low (light green), Optional (light blue). It shows as a dot before the name, or as two circling arrows for recurring tasks.</li>
+<li>The list is sorted by due date, then priority. Click any header to sort ascending or descending. <b>Task &amp; Due</b> shows days left above the task name. 0 days (red) means due today or overdue.</li>
 <li><b>Timer:</b> ▶ starts and ⏸ pauses, in the first column. Blue is your estimate and black is the time spent.</li>
-<li><b>Edit</b> by clicking a row (not the checkbox or timer). Set priority, due date, estimated and actual duration, recurring (daily, weekly, monthly), Passive Time (a slider sets what percentage of the task’s time is passive) and notes. Save keeps changes, Cancel discards them, and the red trash icon deletes.</li>
-<li><b>Done?</b> moves a task to Finished tasks, newest first. Untick it there to bring it back. Recurring tasks leave a history entry (only its actual duration can be edited) and reappear at midnight on their next date.</li>
-<li>The <b>totals</b> above the list split estimated time left between active and passive time, plus the active time left on tasks due today. On Finished tasks, the 7-day averages each have a graph icon that opens a chart.</li>
+<li><b>Edit</b> by clicking a row (not the checkbox or timer). Set priority, due date, estimated and actual duration, recurring (daily, weekly, monthly), Passive Time (a slider sets what percentage of the task’s time is passive), a category and notes. Save keeps changes, Cancel discards them, and the red trash icon deletes.</li>
+<li><b>Done?</b> moves a task to Finished tasks. A recurring task comes back as a fresh copy at midnight on its next date.</li>
+<li>The <b>totals</b> above the list show tasks left (coloured by how many), and the estimated time left split between active and passive time, including the active time left on tasks due today.</li>
+<li><b>Backup:</b> Export shows your data to copy. Import restores it from a file or pasted text.</li>
+</ol>
+<ol id="inDone" hidden>
+<li>Finished tasks are listed newest first. <b>Due &amp; Done</b> shows the due date in blue over the date you finished. Click any header to sort.</li>
+<li>Untick <b>Done?</b> to send a task back to Current tasks. Click a row to edit any detail, including the actual time.</li>
+<li>A finished recurring task stays here until its next date. Then a fresh copy appears in Current tasks and this entry stops recurring.</li>
+<li>The three <b>averages</b> cover the last 7 days (days with no tracked time or completions are left out). Tap the graph icon in front of one to see its 7-day chart.</li>
+<li><b>By Category</b> switches the list to totals per category. Hrs is the total time spent, and the blue line fills at 100 hours. Tasks without a category are grouped as Uncategorised.</li>
+<li><b>Tap a category</b> to show its own 7-day averages and graphs above the table. Tap it again to go back to all tasks. Press By Category again to return to the task list.</li>
 <li><b>Backup:</b> Export shows your data to copy. Import restores it from a file or pasted text.</li>
 </ol>
 </div></div>
 
 <script>
-var KEY='taskboard-v1',state={tasks:[]},tab='cur',editId=null,origA=null,lastDay='';
-var sortS={cur:{k:'auto',d:1},done:{k:'completedAt',d:-1}};
+var KEY='taskboard-v1',state={tasks:[]},tab='cur',editId=null,origA=null,lastDay='',catView=false,selCat=null,selName='';
+var sortS={cur:{k:'auto',d:1},done:{k:'completedAt',d:-1},cat:{k:'hours',d:-1}};
 var PR={5:['Urgent','var(--p5)'],4:['High','var(--p4)'],3:['Medium','var(--p3)'],2:['Low','var(--p2)'],1:['Optional','var(--p1)']};
 var MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 var $=function(i){return document.getElementById(i)};
@@ -183,8 +208,16 @@ function fmt(ms){var s=Math.floor(ms/1000),h=Math.floor(s/3600),m=Math.floor(s%3
 function p2(n){return (n<10?'0':'')+n}
 function rotIcon(c,t){return '<svg class="rot" viewBox="3 3 14 14" width="18" height="18" fill="none" stroke="currentColor" style="color:'+c+'" role="img" aria-label="'+t+'"><title>'+t+'</title><path d="M5.77 8.46A4.5 4.5 0 0 1 13.45 7.11M14.23 11.54A4.5 4.5 0 0 1 6.55 12.89" stroke-width="1.5" stroke-linecap="round"/><polygon fill="currentColor" stroke="none" points="14.74,8.64 14.83,5.95 12.07,8.27"/><polygon fill="currentColor" stroke="none" points="5.26,11.36 5.17,14.05 7.93,11.73"/></svg>'}
 function pf(t){return t.passive?(t.passivePct==null?100:t.passivePct)/100:0}
-function dayData(){var r=[],s=sod(Date.now()),i,d;for(i=6;i>=0;i--){d=new Date(s);d.setDate(d.getDate()-i);r.push({k:iso(d),lab:MON[d.getMonth()]+' '+d.getDate(),a:0,p:0,n:0})}
-state.tasks.forEach(function(t){if(!t.done||!t.completedAt)return;var k=iso(new Date(t.completedAt)),x=r.find(function(y){return y.k===k});if(!x)return;x.n++;var h=el(t)/36e5,f=pf(t);x.p+=h*f;x.a+=h*(1-f)});return r}
+function addSpan(m,a,b){while(a<b){var d=sod(a),e=new Date(d);e.setDate(e.getDate()+1);var g=Math.min(b,e.getTime())-a,k=iso(d);m[k]=(m[k]||0)+g;a+=g}}
+function dayTimes(t){var m={},tot=0,k,n=Date.now();if(t.log)for(k in t.log){m[k]=t.log[k];tot+=t.log[k]}
+if(t.running){var q={};addSpan(q,t.running,n);for(k in q){m[k]=(m[k]||0)+q[k];tot+=q[k]}}
+var e=el(t);if(tot>e&&tot>0){var sc=e/tot;for(k in m)m[k]*=sc}
+else if(e-tot>1000){var lk=t.done&&t.completedAt?iso(new Date(t.completedAt)):iso(new Date(t.created||n));m[lk]=(m[lk]||0)+(e-tot)}
+return m}
+function dayData(cat){var r=[],s=sod(Date.now()),i,d;for(i=6;i>=0;i--){d=new Date(s);d.setDate(d.getDate()-i);r.push({k:iso(d),lab:MON[d.getMonth()]+' '+d.getDate(),a:0,p:0,n:0})}
+state.tasks.forEach(function(t){if(cat&&ckeyOf(t)!==cat)return;var f=pf(t),m=dayTimes(t);
+r.forEach(function(x){var h=(m[x.k]||0)/36e5;x.p+=h*f;x.a+=h*(1-f)});
+if(t.done&&t.completedAt){var k=iso(new Date(t.completedAt)),x=r.find(function(y){return y.k===k});if(x)x.n++}});return r}
 function iso(d){return d.getFullYear()+'-'+p2(d.getMonth()+1)+'-'+p2(d.getDate())}
 function sod(n){var d=new Date(n);d.setHours(0,0,0,0);return d}
 function fdate(d){return d?d.slice(2,4)+MON[+d.slice(5,7)-1]+d.slice(8,10):'—'}
@@ -197,12 +230,13 @@ if(t.recur==='weekly'){d=new Date(s);do{d.setDate(d.getDate()+1)}while(d.getDay(
 if(t.recur==='monthly'){for(var k=0;k<14;k++){var y=s.getFullYear(),m=s.getMonth()+k,dim=new Date(y,m+1,0).getDate();d=new Date(y,m,Math.min(a.getDate(),dim));if(d>s)return d}}
 d=new Date(s);d.setDate(d.getDate()+1);return d}
 function step(d,r){if(r==='weekly')d.setDate(d.getDate()+7);else if(r==='monthly')d.setMonth(d.getMonth()+1);else d.setDate(d.getDate()+1)}
-function wake(){var ch=false,n=Date.now();state.tasks.forEach(function(t){if(t.hiddenUntil&&n>=t.hiddenUntil){t.hiddenUntil=null;t.done=false;ch=true;
-if(t.due){var d=new Date(t.due+'T00:00'),s=sod(n),i=0;while(d<s&&i<800){step(d,t.recur);i++}t.due=iso(d)}}});if(ch)save();return ch}
-function complete(t){if(t.running){t.elapsed=el(t);t.running=null}
-if(t.recurring){state.tasks.push({id:Date.now().toString(36)+Math.random().toString(36).slice(2,6),name:t.name,priority:t.priority,due:t.due,est:t.est,elapsed:t.elapsed||0,running:null,done:true,completedAt:Date.now(),hist:true,recurring:true,recur:t.recur,passive:t.passive,passivePct:t.passivePct,notes:t.notes||''});
-t.elapsed=0;t.hiddenUntil=nextRecur(t).getTime()}
-else{t.done=true;t.completedAt=Date.now()}}
+function newId(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6)}
+function advDue(c){if(c.due){var d=new Date(c.due+'T00:00'),s=sod(Date.now()),i=0;while(d<s&&i<800){step(d,c.recur);i++}c.due=iso(d)}}
+function wake(){var ch=false,n=Date.now();state.tasks.slice().forEach(function(t){
+if(t.hiddenUntil&&n>=t.hiddenUntil){t.hiddenUntil=null;t.done=false;ch=true;advDue(t)}
+if(t.done&&t.recurring&&t.nextAt&&n>=t.nextAt){var c=JSON.parse(JSON.stringify(t));c.id=newId();c.done=false;c.completedAt=null;c.elapsed=0;c.running=null;c.nextAt=null;c.hiddenUntil=null;c.log={};advDue(c);
+t.recurring=false;t.nextAt=null;state.tasks.push(c);ch=true}});if(ch)save();return ch}
+function complete(t){if(t.running){addSpan(t.log||(t.log={}),t.running,Date.now());t.elapsed=el(t);t.running=null}t.done=true;t.completedAt=Date.now();t.nextAt=t.recurring?nextRecur(t).getTime():null}
 
 function val(t,k){switch(k){case'timer':return t.running?1:0;case'done':return t.done?1:0;case'name':return t.name.toLowerCase();case'due':return t.due||null;case'completedAt':return t.completedAt||null}}
 function cmp(a,b,k,d){var x=val(a,k),y=val(b,k);if(x===null&&y===null)return 0;if(x===null)return 1;if(y===null)return -1;return x<y?-d:x>y?d:0}
@@ -211,9 +245,20 @@ var r=s.k==='auto'?0:cmp(a,b,s.k,s.d);
 return r||cmp(a,b,'due',1)||((b.priority||3)-(a.priority||3))||cmp(a,b,'name',1)})}
 function stats(){var a=0,p=0,n=0,dd=0,td=iso(new Date());state.tasks.forEach(function(t){if(t.done||t.hiddenUntil)return;n++;var e=Math.max(0,(+t.est||0)-el(t)/60000);var f=pf(t);p+=e*f;a+=e*(1-f);if(t.due&&t.due<=td)dd+=e*(1-f)});
 $('sD').textContent=hm(dd);$('sA').textContent=hm(a);$('sP').textContent=hm(p);$('sN').textContent=n;$('sN').style.color=n===0?'#9b4fd8':n<=5?'#2f80ed':n<=10?'#2e9e4f':n<=15?'#d9a400':n<=20?'#f08a24':'#e0312f';
-var sa=0,sp=0,sn=0,nd=0;dayData().forEach(function(x){sa+=x.a;sp+=x.p;sn+=x.n;if(x.n)nd++});nd=Math.max(1,nd);
+var sa=0,sp=0,sn=0,nd=0;dayData(catView?selCat:null).forEach(function(x){sa+=x.a;sp+=x.p;sn+=x.n;if(x.n||x.a+x.p>0)nd++});nd=Math.max(1,nd);
 $('gA').textContent=(sa/nd).toFixed(1)+' h';$('gP').textContent=(sp/nd).toFixed(1)+' h';$('gN').textContent=(sn/nd).toFixed(1)}
+function cats(){var m={};state.tasks.forEach(function(t){var h=el(t)/36e5;if(!t.done&&!(h>0))return;var k=ckeyOf(t),c=m[k]||(m[k]={k:k,name:t.cat&&t.cat.trim()?t.cat.trim():'Uncategorised',h:0});c.h+=h});return Object.keys(m).map(function(k){return m[k]})}
+function chrome(done){$('add').hidden=done;$('stats').hidden=done;$('stats2').hidden=!done;$('catBtn').hidden=!done;$('catBtn').setAttribute('aria-pressed',catView);
+$('catLbl').hidden=!(done&&catView);$('catLbl').textContent=selCat?'Category: '+selName+' (last 7 days)':'All tasks (last 7 days). Tap a category for its own stats.';stats()}
+function renderCat(){var s=sortS.cat,list=cats();
+list.sort(function(a,b){var x=s.k==='name'?a.name.toLowerCase():a.h,y=s.k==='name'?b.name.toLowerCase():b.h;return (x<y?-s.d:x>y?s.d:0)||(a.name.toLowerCase()<b.name.toLowerCase()?-1:1)});
+var cols=[['name','Category'],['hours','Hrs'],['hours','100h',1]];
+var h='<thead><tr>'+cols.map(function(c){var ar=s.k===c[0]&&!c[2]?(s.d>0?' ▲':' ▼'):'';return '<th data-k="'+c[0]+'">'+c[1]+ar+'</th>'}).join('')+'</tr></thead><tbody>';
+if(!list.length)h+='<tr><td class="empty" colspan="3">Nothing tracked yet.</td></tr>';
+list.forEach(function(c){h+='<tr data-cat="'+esc(c.k)+'"'+(selCat===c.k?' class="sel"':'')+'><td class="name">'+esc(c.name)+'</td><td class="hr">'+(c.h<1?c.h.toFixed(2):c.h.toFixed(1))+'</td><td class="lw"><div class="line"><i style="width:'+Math.min(100,c.h)+'%"></i></div></td></tr>'});
+$('tbl').className='cat';$('tbl').innerHTML=h+'</tbody>';chrome(true)}
 function render(){
+if(tab==='done'&&catView){renderCat();return}
 var done=tab==='done',s=sortS[tab],list=sorted(state.tasks.filter(function(t){return !t.hiddenUntil&&!!t.done===done}));
 var cols=done?[['completedAt','Due & Done'],['done','Done?'],['name','Task']]:[['timer','Timer'],['done','Done?'],['due','Task & Due']];
 var h='<thead><tr>'+cols.map(function(c){var ar=s.k===c[0]?(s.d>0?' ▲':' ▼'):'';return '<th data-k="'+c[0]+'">'+c[1]+ar+'</th>'}).join('')+'</tr></thead><tbody>';
@@ -223,48 +268,53 @@ var p=PR[t.priority]||PR[3],
 ico=t.recurring?rotIcon(p[1],p[0]+' priority, repeats '+(t.recur||'daily')):'<span class="dot" title="'+p[0]+' priority" style="background:'+p[1]+'"></span>',
 nm='<td class="name">'+ico+esc(t.name)+'</td>',
 est=t.est!==''&&t.est!=null?'<div class="est">'+fmt(t.est*60000)+'</div>':'',
-chk='<td class="tt"><input type="checkbox" data-act="done" aria-label="Done"'+(t.done?' checked':'')+(t.hist?' disabled':'')+'>'+(done?est+'<div class="el">'+fmt(el(t))+'</div>':'')+'</td>',first;
+chk='<td class="tt"><input type="checkbox" data-act="done" aria-label="Done"'+(t.done?' checked':'')+'>'+(done?est+'<div class="el">'+fmt(el(t))+'</div>':'')+'</td>',first;
 if(done)first='<td class="tt"><div class="est">'+fdate(t.due)+'</div><div>'+(t.completedAt?fdate(iso(new Date(t.completedAt))):'—')+'</div></td>';
 else{var n=t.due?days(t.due):null;nm=nm.replace('<td class="name">','<td class="name"><div'+(n===0?' class="late"':'')+'>'+(n===null?'—':n+(n===1?' day':' days'))+'</div>');first='<td class="tt"><button data-act="timer" class="tm'+(t.running?' on':'')+'" aria-label="'+(t.running?'Pause timer':'Start timer')+'">'+(t.running?'⏸':'▶')+'</button>'+est+'<div class="el" data-el="'+t.id+'">'+fmt(el(t))+'</div></td>'}
 h+='<tr data-id="'+t.id+'"'+(t.done?' class="fin"':'')+'>'+first+chk+nm+'</tr>'});
 $('tbl').innerHTML=h+'</tbody>';
-$('add').hidden=done;$('stats').hidden=done;$('stats2').hidden=!done;stats();
+$('tbl').className='';chrome(done);
 }
 $('tbl').addEventListener('click',function(e){
 var th=e.target.closest('th');
-if(th){var k=th.dataset.k,s=sortS[tab];if(s.k===k)s.d=-s.d;else{s.k=k;s.d=1}render();return}
+if(th){var k=th.dataset.k,s=sortS[tab==='done'&&catView?'cat':tab];if(s.k===k)s.d=-s.d;else{s.k=k;s.d=1}render();return}
+var cr=e.target.closest('tr[data-cat]');if(cr){var ck=cr.dataset.cat;if(selCat===ck){selCat=null;selName=''}else{selCat=ck;selName=cr.querySelector('.name').textContent}render();return}
 var tr=e.target.closest('tr[data-id]');if(!tr)return;
 var t=find(tr.dataset.id),a=e.target.closest('[data-act]');
 if(!t)return;
 if(!a){openEd(t.id);return}
-if(a.dataset.act==='done'){if(!t.done)complete(t);else{t.done=false;t.completedAt=null}}
-else{if(t.running){t.elapsed=el(t);t.running=null}else t.running=Date.now()}
+if(a.dataset.act==='done'){if(!t.done)complete(t);else{t.done=false;t.completedAt=null;t.nextAt=null}}
+else{if(t.running){addSpan(t.log||(t.log={}),t.running,Date.now());t.elapsed=el(t);t.running=null}else t.running=Date.now()}
 save();render()});
 setInterval(function(){var d=iso(new Date());if(wake()||d!==lastDay){lastDay=d;render();return}
 document.querySelectorAll('[data-el]').forEach(function(c){var t=find(c.dataset.el);if(t)c.textContent=fmt(el(t))});stats()},1000);
 document.querySelectorAll('.tab').forEach(function(b){b.onclick=function(){tab=b.dataset.tab;document.querySelectorAll('.tab').forEach(function(x){x.setAttribute('aria-selected',x===b)});render()}});
 
+function ckeyOf(t){return t.cat&&t.cat.trim()?t.cat.trim().toLowerCase():'__none'}
+function catList(){var seen={},r=[];state.tasks.forEach(function(t){var c=t.cat?t.cat.trim():'';if(c&&!seen[c.toLowerCase()]){seen[c.toLowerCase()]=1;r.push(c)}});return r.sort(function(a,b){return a.toLowerCase()<b.toLowerCase()?-1:1})}
+function existingCat(n){if(!n)return '';var m=catList().find(function(c){return c.toLowerCase()===n.toLowerCase()});return m||n}
+function fillCats(cur){var sel=$('fC');sel.innerHTML='';function add(v,t){var o=document.createElement('option');o.value=v;o.textContent=t;sel.appendChild(o)}
+add('','No category');catList().forEach(function(c){add(c,c)});add('__new','Add Category');
+sel.value=cur?existingCat(cur):'';if(sel.value!==(cur?existingCat(cur):''))sel.value='';$('fCn').value='';$('fCn').hidden=true}
 function openEd(id){var t=id?find(id):null;editId=id;
-$('edT').textContent=t?(t.hist?'Edit finished task':'Edit task'):'Add a task';
+$('edT').textContent=t?'Edit task':'Add a task';
 $('fN').value=t?t.name:'';$('fP').value=t?t.priority:3;$('fD').value=t?t.due||'':'';
 setHM('fEh','fEm',t?t.est:'');origA=t?Math.round(el(t)/60000):null;setHM('fAh','fAm',origA===null?'':origA);
 $('fR').checked=!!(t&&t.recurring);document.querySelector('input[name=rc][value='+(t&&t.recur?t.recur:'daily')+']').checked=true;$('seg').hidden=!$('fR').checked;
-$('fPs').checked=!!(t&&t.passive);$('fPc').value=t&&t.passive?(t.passivePct!=null?t.passivePct:100):50;$('fPv').textContent=$('fPc').value;$('psBox').hidden=!$('fPs').checked;$('fNo').value=t&&t.notes?t.notes:'';
-var lock=!!(t&&t.hist);['fN','fP','fD','fEh','fEm','fR','fPs','fPc','fNo'].forEach(function(i){$(i).disabled=lock});document.querySelectorAll('input[name=rc]').forEach(function(r){r.disabled=lock});
-$('fErr').textContent='';$('fDel').hidden=!t||lock;$('edOv').hidden=false;$(lock?'fAh':'fN').focus()}
+$('fPs').checked=!!(t&&t.passive);$('fPc').value=t&&t.passive?(t.passivePct!=null?t.passivePct:100):50;$('fPv').textContent=$('fPc').value;$('psBox').hidden=!$('fPs').checked;$('fNo').value=t&&t.notes?t.notes:'';fillCats(t?t.cat:'');
+$('fErr').textContent='';$('fDel').hidden=!t;$('edOv').hidden=false;$('fN').focus()}
 $('fR').onchange=function(){$('seg').hidden=!this.checked};
-$('fPs').onchange=function(){$('psBox').hidden=!this.checked};$('fPc').oninput=function(){$('fPv').textContent=this.value};
+$('fPs').onchange=function(){$('psBox').hidden=!this.checked};$('fC').onchange=function(){$('fCn').hidden=this.value!=='__new';if(!$('fCn').hidden)$('fCn').focus()};$('fPc').oninput=function(){$('fPv').textContent=this.value};
 $('add').onclick=function(){openEd(null)};
 $('fCan').onclick=function(){$('edOv').hidden=true};
 $('fSav').onclick=function(){
 var n=$('fN').value.trim();if(!n){$('fErr').textContent='Enter a name for the task.';return}
 var t=editId?find(editId):null;
-if(t&&t.hist){var m0=getHM('fAh','fAm');if(m0!==null&&m0!==origA)t.elapsed=m0*60000;save();$('edOv').hidden=true;render();return}
 if(!t){t={id:Date.now().toString(36)+Math.random().toString(36).slice(2,6),elapsed:0,running:null,done:false,completedAt:null,created:Date.now()};state.tasks.push(t)}
 t.name=n;t.priority=parseInt($('fP').value,10)||3;t.due=$('fD').value||'';
 var e=getHM('fEh','fEm');t.est=e===null?'':e;
-var m=getHM('fAh','fAm');if(m!==null&&m!==origA){t.elapsed=m*60000;if(t.running)t.running=Date.now()}
-t.recurring=$('fR').checked;t.recur=document.querySelector('input[name=rc]:checked').value;t.passive=$('fPs').checked;t.passivePct=+$('fPc').value;t.notes=$('fNo').value;
+var m=getHM('fAh','fAm');if(m!==null&&m!==origA){var old=el(t),nw=Date.now(),L=t.log||(t.log={});if(t.running)addSpan(L,t.running,nw);t.elapsed=m*60000;if(t.running)t.running=nw;var dl=t.elapsed-old;if(dl>0){var tk=iso(new Date(nw));L[tk]=(L[tk]||0)+dl}}
+t.recurring=$('fR').checked;t.recur=document.querySelector('input[name=rc]:checked').value;t.passive=$('fPs').checked;t.passivePct=+$('fPc').value;t.nextAt=t.done&&t.recurring?nextRecur(t).getTime():null;t.notes=$('fNo').value;var cv=$('fC').value;t.cat=cv==='__new'?existingCat($('fCn').value.trim()):cv;
 save();$('edOv').hidden=true;render()};
 $('fDel').onclick=function(){$('cfOv').hidden=false};
 $('cfN').onclick=function(){$('cfOv').hidden=true};
@@ -282,11 +332,11 @@ $('ioF').onchange=function(){var f=this.files[0];if(!f)return;var r=new FileRead
 $('ioA').onclick=function(){
 if(ioMode==='x'){var x=$('ioX');x.select();try{navigator.clipboard.writeText(x.value).then(function(){$('ioE').textContent='Copied.'},function(){document.execCommand('copy');$('ioE').textContent='Copied.'})}catch(e){document.execCommand('copy');$('ioE').textContent='Copied.'}return}
 try{var o=JSON.parse($('ioX').value);if(!o||!Array.isArray(o.tasks))throw 0;
-state={tasks:o.tasks.filter(function(t){return t&&t.name}).map(function(t,i){return{id:String(t.id||('i'+i+Date.now())),name:String(t.name),priority:+t.priority>=1&&+t.priority<=5?+t.priority:3,due:t.due||'',est:t.est===undefined?'':t.est,elapsed:+t.elapsed||0,running:t.running?+t.running:null,done:!!t.done,completedAt:t.completedAt||null,recurring:!!t.recurring,recur:['daily','weekly','monthly'].indexOf(t.recur)>-1?t.recur:'daily',passive:!!t.passive,passivePct:t.passivePct==null?null:+t.passivePct,notes:t.notes?String(t.notes):'',hist:!!t.hist,hiddenUntil:t.hiddenUntil?+t.hiddenUntil:null,created:+t.created||Date.now()}})};
+state={tasks:o.tasks.filter(function(t){return t&&t.name}).map(function(t,i){return{id:String(t.id||('i'+i+Date.now())),name:String(t.name),priority:+t.priority>=1&&+t.priority<=5?+t.priority:3,due:t.due||'',est:t.est===undefined?'':t.est,elapsed:+t.elapsed||0,running:t.running?+t.running:null,done:!!t.done,completedAt:t.completedAt||null,recurring:!!t.recurring&&!t.hist,recur:['daily','weekly','monthly'].indexOf(t.recur)>-1?t.recur:'daily',passive:!!t.passive,passivePct:t.passivePct==null?null:+t.passivePct,cat:t.cat?String(t.cat):'',log:t.log&&typeof t.log==='object'?t.log:{},notes:t.notes?String(t.notes):'',nextAt:t.nextAt?+t.nextAt:null,hiddenUntil:t.hiddenUntil?+t.hiddenUntil:null,created:+t.created||Date.now()}})};
 save();$('ioOv').hidden=true;render()}catch(e){$('ioE').textContent='That backup could not be read. Check that you pasted the full text.'}};
-$('info').onclick=function(){$('inOv').hidden=false};$('inC').onclick=function(){$('inOv').hidden=true};
+$('info').onclick=function(){var dn=tab==='done';$('inCur').hidden=dn;$('inDone').hidden=!dn;$('inT').textContent='How to use: '+(dn?'Finished tasks':'Current tasks');$('inOv').hidden=false};$('inC').onclick=function(){$('inOv').hidden=true};
 document.addEventListener('keydown',function(e){if(e.key==='Escape')document.querySelectorAll('.ov').forEach(function(o){o.hidden=true})});
-function openGraph(g){var T={a:['Active task hours per day','Hours'],p:['Passive task hours per day','Hours'],n:['Completed tasks per day','Tasks']}[g],d=dayData(),hrs=g!=='n',mx=0;
+function openGraph(g){var T={a:['Active task hours per day','Hours'],p:['Passive task hours per day','Hours'],n:['Completed tasks per day','Tasks']}[g],d=dayData(catView?selCat:null),hrs=g!=='n',mx=0;
 d.forEach(function(x){if(x[g]>mx)mx=x[g]});
 mx=hrs?Math.max(0.5,Math.ceil(mx*2)/2):Math.max(1,Math.ceil(mx));
 var L=40,R=8,Tp=16,B=30,W=320,H=210,pw=W-L-R,ph=H-Tp-B,s='<svg viewBox="0 0 '+W+' '+H+'" width="100%" role="img" aria-label="'+T[0]+', last 7 days" style="font-size:10px">';
@@ -296,9 +346,10 @@ d.forEach(function(x,i){var bw=pw/7,h=ph*x[g]/mx,bx=L+i*bw+bw*.2,y=Tp+ph-h;
 s+='<rect x="'+bx+'" y="'+y+'" width="'+bw*.6+'" height="'+h+'" rx="2" style="fill:var(--accent)"/>';
 if(x[g]>0)s+='<text x="'+(bx+bw*.3)+'" y="'+(y-3)+'" text-anchor="middle" style="fill:var(--ink)">'+(+x[g].toFixed(1))+'</text>';
 s+='<text x="'+(bx+bw*.3)+'" y="'+(H-12)+'" text-anchor="middle" style="fill:var(--muted)">'+x.lab+'</text>'});
-$('gT').textContent=T[0];$('gB').innerHTML=s+'</svg>';$('gOv').hidden=false}
+$('gT').textContent=T[0]+(catView&&selCat?': '+selName:'');$('gB').innerHTML=s+'</svg>';$('gOv').hidden=false}
 document.querySelectorAll('.gi').forEach(function(b){b.onclick=function(){openGraph(b.dataset.g)}});$('gC').onclick=function(){$('gOv').hidden=true};
-load();wake();lastDay=iso(new Date());render();
+$('catBtn').onclick=function(){catView=!catView;selCat=null;selName='';render()};
+load();state.tasks.forEach(function(t){if(t.hist){t.hist=false;t.recurring=false}});wake();lastDay=iso(new Date());render();
 </script>
 </body>
 </html>
