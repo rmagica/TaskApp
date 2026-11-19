@@ -1,8 +1,7 @@
-
 <!DOCTYPE html>
 <html lang="en">
-<head>
-          <link rel="icon" href="favicon.ico">
+<head>  
+  <link rel="icon" href="favicon.ico">
   <link rel="manifest" href="site.webmanifest">
   </head>
 <meta charset="utf-8">
@@ -80,6 +79,7 @@ textarea.nt{min-height:70px;font:inherit;font-size:.95rem}
 .info ol{padding-left:20px;margin:0}.info li{margin-bottom:.4em}
 .gi{background:none;border:1px solid var(--line);border-radius:6px;padding:3px 5px;margin-right:6px;cursor:pointer;color:var(--accent);vertical-align:middle;line-height:0}.gi:hover{background:var(--hover)}
 #stats2{flex-direction:column;gap:6px;font-size:.85rem}
+td.tt .tz{cursor:pointer;padding:4px 8px;margin:-4px -8px;border-radius:8px}td.tt .tz:active{background:var(--line)}
 #add,#catBtn{flex:none;align-self:center;margin:0 0 14px}
 tr[data-cat]{user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
 .edp #fCr{padding:3px 8px;font-size:.9em;white-space:nowrap}
@@ -281,7 +281,7 @@ nm='<td class="name">'+ico+esc(t.name)+'</td>',
 est=t.est!==''&&t.est!=null?'<div class="est">'+fmt(t.est*60000)+'</div>':'',
 chk='<td class="tt"><input type="checkbox" data-act="done" aria-label="Done"'+(t.done?' checked':'')+'>'+(done?est+'<div class="el">'+fmt(el(t))+'</div>':'')+'</td>',first;
 if(done)first='<td class="tt"><div class="est">'+fdate(t.due)+'</div><div>'+(t.completedAt?fdate(iso(new Date(t.completedAt))):'—')+'</div></td>';
-else{var n=t.due?days(t.due):null;nm=nm.replace('<td class="name">','<td class="name"><div'+(n===0?' class="late"':'')+'>'+(n===null?'—':n+(n===1?' day':' days'))+'</div>');first='<td class="tt"><button data-act="timer" class="tm'+(t.running?' on':'')+'" aria-label="'+(t.running?'Pause timer':'Start timer')+'">'+(t.running?'⏸':'▶')+'</button>'+est+'<div class="el" data-el="'+t.id+'">'+fmt(el(t))+'</div></td>'}
+else{var n=t.due?days(t.due):null;nm=nm.replace('<td class="name">','<td class="name"><div'+(n===0?' class="late"':'')+'>'+(n===null?'—':n+(n===1?' day':' days'))+'</div>');first='<td class="tt"><div class="tz" data-act="timer"><button class="tm'+(t.running?' on':'')+'" aria-label="'+(t.running?'Pause timer':'Start timer')+'">'+(t.running?'⏸':'▶')+'</button>'+est+'<div class="el" data-el="'+t.id+'">'+fmt(el(t))+'</div></div></td>'}
 h+='<tr data-id="'+t.id+'"'+(t.done?' class="fin"':'')+'>'+first+chk+nm+'</tr>'});
 $('tbl').innerHTML=h+'</tbody>';
 $('tbl').className='';chrome(done);
